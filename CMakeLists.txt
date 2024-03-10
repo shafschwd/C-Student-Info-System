@@ -3,5 +3,4 @@ project(C_SIS C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(C_SIS
-        test.c)
+add_executable(reg usereg.c)
