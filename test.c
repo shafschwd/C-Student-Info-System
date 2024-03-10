@@ -7,6 +7,7 @@ typedef struct {
     char username[50];
     char password[50];
     char role[50];
+    int number; // new field for user's number
 } User;
 
 // Function to register a new user
