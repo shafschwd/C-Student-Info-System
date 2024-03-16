@@ -22,7 +22,7 @@ void registerUser(int userNumber, char *username, char *password, char *role){
 
     FILE *file = fopen("../users.txt", "a");
     if (file != NULL) {
-        fprintf(file, "%d %s %s %s\n", newUser.userNumber, newUser.username, newUser.password, newUser.role);
+        fprintf(file, "%d %s %s \"%s\"\n", newUser.userNumber, newUser.username, newUser.password, newUser.role);
         fclose(file);
     }
 }
@@ -103,39 +103,17 @@ int validateCredentials(char *username, char *password) {
     return 0;
 }
 
-// Function to update user password
-void updateUserPassword(int userNumber, char *newPassword) {
+// Function to update username
+void updateUsername(int userNumber, char *newUsername) {
     User user;
     FILE *file = fopen("../users.txt", "r+");
     FILE *tempFile = fopen("temp.txt", "w");
+    char line[256];
     if (file != NULL && tempFile != NULL) {
-        while (fscanf(file, "%d %s %s %s\n", &user.userNumber, user.username, user.password, user.role) != EOF) {
+        while (fgets(line, sizeof(line), file)) {
+            sscanf(line, "%d %s %s %s", &user.userNumber, user.username, user.password, user.role);
             if (user.userNumber == userNumber) {
-                strcpy(user.password, newPassword);
-            }
-            fprintf(tempFile, "%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
-        }
-        fclose(file);
-        fclose(tempFile);
-        remove("users.txt");
-        rename("temp.txt", "../users.txt");
-    }
-}
-
-// Function to update user details
-void updateUserDetails(int userNumber, char *newUsername, char *newRole) {
-    User user;
-    FILE *file = fopen("../users.txt", "r+");
-    FILE *tempFile = fopen("temp.txt", "w");
-    if (file != NULL && tempFile != NULL) {
-        while (fscanf(file, "%d %s %s %s\n", &user.userNumber, user.username, user.password, user.role) != EOF) {
-            if (user.userNumber == userNumber) {
-                if (newUsername != NULL) {
-                    strcpy(user.username, newUsername);
-                }
-                if (newRole != NULL) {
-                    strcpy(user.role, newRole);
-                }
+                strcpy(user.username, newUsername);
             }
             fprintf(tempFile, "%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
         }
@@ -146,6 +124,71 @@ void updateUserDetails(int userNumber, char *newUsername, char *newRole) {
     }
 }
 
+// Function to update password
+void updatePassword(int userNumber, char *newPassword) {
+    User user;
+    FILE *file = fopen("../users.txt", "r+");
+    FILE *tempFile = fopen("temp.txt", "w");
+    char line[256];
+    if (file != NULL && tempFile != NULL) {
+        while (fgets(line, sizeof(line), file)) {
+            sscanf(line, "%d %s %s %s", &user.userNumber, user.username, user.password, user.role);
+            if (user.userNumber == userNumber) {
+                strcpy(user.password, newPassword);
+            }
+            fprintf(tempFile, "%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
+        }
+        fclose(file);
+        fclose(tempFile);
+        remove("../users.txt");
+        rename("temp.txt", "../users.txt");
+    }
+}
+
+// Function to update user role
+void updateUserRole(int userNumber, char *newRole) {
+    User user;
+    FILE *file = fopen("../users.txt", "r+");
+    FILE *tempFile = fopen("temp.txt", "w");
+    char line[256];
+    if (file != NULL && tempFile != NULL) {
+        while (fgets(line, sizeof(line), file)) {
+            sscanf(line, "%d %s %s %s", &user.userNumber, user.username, user.password, user.role);
+            if (user.userNumber == userNumber) {
+                strcpy(user.role, newRole);
+            }
+            fprintf(tempFile, "%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
+        }
+        fclose(file);
+        fclose(tempFile);
+        remove("../users.txt");
+        rename("temp.txt", "../users.txt");
+    }
+}
+
+// Function to read a specific user's details
+void readSpecificUserDetails(int userNumber) {
+    User user;
+    FILE *file = fopen("../users.txt", "r");
+    char line[256];
+    if (file != NULL) {
+        while (fgets(line, sizeof(line), file)) {
+            sscanf(line, "%d %s %s %s", &user.userNumber, user.username, user.password, user.role);
+            if (user.userNumber == userNumber) {
+                printf("User Number: %d\n", user.userNumber);
+                printf("Username: %s\n", user.username);
+                printf("Password: %s\n", user.password);
+                printf("Role: %s\n", user.role);
+                printf("\n");
+                break;
+            }
+        }
+        fclose(file);
+    } else {
+        printf("Unable to open file.\n");
+    }
+}
+
 
 // Function to create a user
 void createUser() {
@@ -153,64 +196,66 @@ void createUser() {
     inputAndRegisterUser();
 }
 
-
 // Function to modify a user
 void modifyUser() {
     int userNumber;
     char newUsername[50];
     char newPassword[50];
-    int newRole;
+    char newRole[50];
+    int roleChoice;
     int choice;
 
     printf("Enter user number of the user to modify: ");
     scanf("%d", &userNumber);
 
-    printf("What do you want to modify?\n1. Username\n2. Password\n3. User role\n4. Back to modify user\n");
-    scanf("%d", &choice);
+    do {
+        printf("What do you want to modify?\n1. Username\n2. Password\n3. User role\n4. Back to modify user\n");
+        scanf("%d", &choice);
 
-    switch(choice) {
-        case 1:
-            printf("Enter new username: ");
-            scanf("%s", newUsername);
-            updateUserDetails(userNumber, newUsername, NULL);
-            break;
-        case 2:
-            printf("Enter new password: ");
-            scanf("%s", newPassword);
-            updateUserPassword(userNumber, newPassword);
-            break;
-        case 3:
-            do {
+        switch(choice) {
+            case 1:
+                printf("Enter new username: ");
+                scanf("%s", newUsername);
+                updateUsername(userNumber, newUsername);
+                printf("Username updated successfully.\n");
+                break;
+            case 2:
+                printf("Enter new password: ");
+                scanf("%s", newPassword);
+                updatePassword(userNumber, newPassword);
+                printf("Password updated successfully.\n");
+                break;
+            case 3:
                 printf("Enter new role:\n1. Student\n2. Programme administrator\n3. Lecturer\n4. System Administrator\n");
-                scanf("%d", &newRole);
-                if(newRole < 1 || newRole > 4) {
-                    printf("Invalid role. Please enter a number between 1 and 4.\n");
+                scanf("%d", &roleChoice);
+                switch(roleChoice) {
+                    case 1:
+                        strcpy(newRole, "student");
+                        break;
+                    case 2:
+                        strcpy(newRole, "Programme administrator");
+                        break;
+                    case 3:
+                        strcpy(newRole, "Lecturer");
+                        break;
+                    case 4:
+                        strcpy(newRole, "System Administrator");
+                        break;
+                    default:
+                        printf("Invalid role. Please enter a number between 1 and 4.\n");
+                        return;
                 }
-            } while(newRole < 1 || newRole > 4);
-            char roleStr[50];
-            switch(newRole) {
-                case 1:
-                    strcpy(roleStr, "student");
-                    break;
-                case 2:
-                    strcpy(roleStr, "Programme administrator");
-                    break;
-                case 3:
-                    strcpy(roleStr, "Lecturer");
-                    break;
-                case 4:
-                    strcpy(roleStr, "System Administrator");
-                    break;
-            }
-            updateUserDetails(userNumber, NULL, roleStr);
-            break;
-        case 4:
-            printf("Returning to modify user...\n");
-            break;
-        default:
-            printf("Invalid choice. Please enter a number between 1 and 4.\n");
-            break;
-    }
+                updateUserRole(userNumber, newRole);
+                printf("User role updated successfully.\n");
+                break;
+            case 4:
+                printf("Returning to modify user...\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                break;
+        }
+    } while(choice != 4);
 }
 
 // Function to delete a user
@@ -222,31 +267,40 @@ void deleteUser() {
     FILE *file = fopen("../users.txt", "r");
     FILE *tempFile = fopen("temp.txt", "w");
     User user;
+    int userExists = 0; // flag to check if user exists
     if (file != NULL && tempFile != NULL) {
         while (fscanf(file, "%d %s %s %s\n", &user.userNumber, user.username, user.password, user.role) != EOF) {
+            if (user.userNumber == userNumber) {
+                userExists = 1; // set flag to true if user is found
+            }
             if (user.userNumber != userNumber) {
                 fprintf(tempFile, "%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
             }
         }
         fclose(file);
         fclose(tempFile);
-        remove("users.txt");
+        remove("../users.txt");
         rename("temp.txt", "../users.txt");
     }
-    printf("User deleted successfully.\n");
+    if (userExists) {
+        printf("User deleted successfully.\n");
+    } else {
+        printf("Error: User does not exist.\n");
+        return;
+    }
 }
 
-
-
-int main() {
+void userManagementMenu() {
     int choice;
+    int userNumber;
 
     do {
-        printf("\n********** MENU **********\n");
+        printf("\n********** User Management Menu **********\n");
         printf("1. Create User\n");
         printf("2. Modify User\n");
-        printf("3. Delete User\n");
-        printf("4. Exit\n");
+        printf("3. View user detail\n");
+        printf("4. Delete User\n");
+        printf("5. Exit\n");
         printf("**************************\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
@@ -259,16 +313,252 @@ int main() {
                 modifyUser();
                 break;
             case 3:
-                deleteUser();
+                printf("Enter user number: ");
+                scanf("%d", &userNumber);
+                readSpecificUserDetails(userNumber);
                 break;
             case 4:
+                deleteUser();
+                break;
+            case 5:
                 printf("Exiting...\n");
                 break;
             default:
-                printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                printf("Invalid choice. Please enter a number between 1 and 5.\n");
                 break;
         }
-    } while(choice != 4);
+    } while(choice != 5);
+}
+
+// Function to display menus
+void studentMenu() {
+    int choice;
+    do {
+        printf("\n********** Student Menu **********\n");
+        printf("1. View Courses\n");
+        printf("2. Enroll in Course\n");
+        printf("3. Drop Course\n");
+        printf("4. View Grades\n");
+        printf("5. Logout\n");
+        printf("**************************\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1:
+//                viewCourses();
+                break;
+            case 2:
+//                enrollInCourse();
+                break;
+            case 3:
+//                dropCourse();
+                break;
+            case 4:
+//                viewGrades();
+                break;
+            case 5:
+                printf("Logging out...\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                break;
+        }
+    } while(choice != 5);
+}
+
+void programmeAdminMenu() {
+    int choice;
+    do {
+        printf("\n********** Programme Administrator Menu **********\n");
+        printf("1. Add Course\n");
+        printf("2. Modify Course\n");
+        printf("3. Delete Course\n");
+        printf("4. View All Courses\n");
+        printf("5. Logout\n");
+        printf("**************************\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1:
+//                addCourse();
+                break;
+            case 2:
+//                modifyCourse();
+                break;
+            case 3:
+//                deleteCourse();
+                break;
+            case 4:
+//                viewAllCourses();
+                break;
+            case 5:
+                printf("Logging out...\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                break;
+        }
+    } while(choice != 5);
+}
+
+void lecturerMenu() {
+    int choice;
+    do {
+        printf("\n********** Lecturer Menu **********\n");
+        printf("1. View Courses\n");
+        printf("2. Add Grades\n");
+        printf("3. Modify Grades\n");
+        printf("4. View All Students\n");
+        printf("5. Logout\n");
+        printf("**************************\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1:
+//                viewCourses();
+                break;
+            case 2:
+//                addGrades();
+                break;
+            case 3:
+//                modifyGrades();
+                break;
+            case 4:
+//                viewAllStudents();
+                break;
+            case 5:
+                printf("Logging out...\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                break;
+        }
+    } while(choice != 5);
+}
+
+void systemAdminMenu() {
+    int choice;
+    do {
+        printf("\n********** System Administrator Menu **********\n");
+        printf("1. Add User\n");
+        printf("2. Modify User\n");
+        printf("3. Delete User\n");
+        printf("4. View All Users\n");
+        printf("5. Logout\n");
+        printf("**************************\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1:
+                userManagementMenu();
+                break;
+            case 2:
+//                modifyUser();
+                break;
+            case 3:
+//                deleteUser();
+                break;
+            case 4:
+//                viewAllUsers();
+                break;
+            case 5:
+                printf("Logging out...\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                break;
+        }
+    } while(choice != 5);
+}
+
+
+
+int main() {
+//    char username[50];
+//    char password[50];
+//    int loginSuccess = 0;
+//
+//    // Login system
+//    do {
+//        printf("Enter username: ");
+//        scanf("%s", username);
+//        printf("Enter password: ");
+//        scanf("%s", password);
+//
+//        loginSuccess = validateCredentials(username, password);
+//        if (!loginSuccess) {
+//            printf("Invalid username or password. Please try again.\n");
+//        }
+//    } while (!loginSuccess);
+//
+//    // Read user role
+//    User user;
+//    FILE *file = fopen("../users.txt", "r");
+//    char line[256];
+//    if (file != NULL) {
+//        while (fgets(line, sizeof(line), file)) {
+//            sscanf(line, "%d %s %s %[^\n]", &user.userNumber, user.username, user.password, user.role);
+//            if (strcmp(user.username, username) == 0 && strcmp(user.password, password) == 0) {
+//                break;
+//            }
+//        }
+//        fclose(file);
+//    }
+//
+//    // Redirect to appropriate menu based on user role
+//    if (strcmp(user.role, "student") == 0) {
+//        studentMenu();
+//    } else if (strcmp(user.role, "Programme administrator") == 0) {
+//        programmeAdminMenu();
+//    } else if (strcmp(user.role, "Lecturer") == 0) {
+//        lecturerMenu();
+//    } else if (strcmp(user.role, "System Administrator") == 0) {
+//        systemAdminMenu();
+//    }
+
+    int choice;
+    int userNumber;
+
+    do {
+        printf("\n********** User Management Menu **********\n");
+        printf("1. Create User\n");
+        printf("2. Modify User\n");
+        printf("3. View user detail\n");
+        printf("4. Delete User\n");
+        printf("5. Exit\n");
+        printf("**************************\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1:
+                createUser();
+                break;
+            case 2:
+                modifyUser();
+                break;
+            case 3:
+                printf("Enter user number: ");
+                scanf("%d", &userNumber);
+                readSpecificUserDetails(userNumber);
+                break;
+            case 4:
+                deleteUser();
+                break;
+            case 5:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                break;
+        }
+    } while(choice != 5);
 
     return 0;
 }
+
+
