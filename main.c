@@ -548,8 +548,9 @@ void mainMenu() {
                 loginSystem();
                 printf("Do you want to exit the program? (1 for yes, 0 for no): ");
                 scanf("%d", &exitProgram);
-                if (exitProgram == 0) {
-                    continue; // If user wants to go back to main menu, continue the loop
+                if (exitProgram == 1) {
+                    printf("Exiting...\n");
+                    return; // If user wants to exit the program, return from the function
                 }
                 break;
             case 2:
