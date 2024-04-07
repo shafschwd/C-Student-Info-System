@@ -376,7 +376,7 @@ void studentMenu() {
                 printf("Logging out...\n");
                 return;  // Return from the function when logout is selected
             default:
-                printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                printf("Invalid choice. Please enter a number between 1 and 2.\n");
                 break;
         }
     } while(choice != 5);
@@ -487,60 +487,83 @@ void systemAdminMenu() {
     } while(choice != 5);
 }
 
-
-
-int main() {
+void loginSystem() {
     char username[50];
     char password[50];
     int loginSuccess = 0;
-    int exitProgram = 0; // flag to check if user wants to exit the program
 
-    // Program loop
-    while (!exitProgram) {
-        // Login system
-        do {
-            printf("Enter username: ");
-            scanf("%s", username);
-            printf("Enter password: ");
-            scanf("%s", password);
+    // Login system
+    do {
+        printf("Enter username: ");
+        scanf("%s", username);
+        printf("Enter password: ");
+        scanf("%s", password);
 
-            loginSuccess = validateCredentials(username, password);
-            if (!loginSuccess) {
-                printf("Invalid username or password. Please try again.\n");
-            }
-        } while (!loginSuccess);
-
-        // Read user role
-        User user;
-        FILE *file = fopen("../users.txt", "r");
-        char line[256];
-        if (file != NULL) {
-            while (fgets(line, sizeof(line), file)) {
-                sscanf(line, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role);
-                if (strcmp(user.username, username) == 0 && strcmp(user.password, password) == 0) {
-                    break;
-                }
-            }
-            fclose(file);
+        loginSuccess = validateCredentials(username, password);
+        if (!loginSuccess) {
+            printf("Invalid username or password. Please try again.\n");
         }
+    } while (!loginSuccess);
 
-        // Redirect to appropriate menu based on user role
-        if (strcmp(user.role, "STD") == 0) {
-            studentMenu();
-        } else if (strcmp(user.role, "PAD") == 0) {
-            programmeAdminMenu();
-        } else if (strcmp(user.role, "LCT") == 0) {
-            lecturerMenu();
-        } else if (strcmp(user.role, "SAD") == 0) {
-            systemAdminMenu();
+    // Read user role
+    User user;
+    FILE *file = fopen("../users.txt", "r");
+    char line[256];
+    if (file != NULL) {
+        while (fgets(line, sizeof(line), file)) {
+            sscanf(line, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role);
+            if (strcmp(user.username, username) == 0 && strcmp(user.password, password) == 0) {
+                break;
+            }
         }
-
-        // Ask user if they want to exit the program
-        printf("Do you want to exit the program? (1 for yes, 0 for no): ");
-        scanf("%d", &exitProgram);
+        fclose(file);
     }
 
-    return 0;
+    // Redirect to appropriate menu based on user role
+    if (strcmp(user.role, "STD") == 0) {
+        studentMenu();
+    } else if (strcmp(user.role, "PAD") == 0) {
+        programmeAdminMenu();
+    } else if (strcmp(user.role, "LCT") == 0) {
+        lecturerMenu();
+    } else if (strcmp(user.role, "SAD") == 0) {
+        systemAdminMenu();
+    }
 }
 
+void mainMenu() {
+    int choice;
+    int exitProgram = 0; // flag to check if user wants to exit the program
+
+    do {
+        printf("\n********** STUDENT-INFORMATION-SYSTEM **********\n");
+        printf("1. Login\n");
+        printf("2. Exit\n");
+        printf("**************************\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1:
+                loginSystem();
+                printf("Do you want to exit the program? (1 for yes, 0 for no): ");
+                scanf("%d", &exitProgram);
+                if (exitProgram == 0) {
+                    continue; // If user wants to go back to main menu, continue the loop
+                }
+                break;
+            case 2:
+                printf("Exiting...\n");
+                return;  // Return from the function when exit is selected
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 2.\n");
+                break;
+        }
+    } while(choice != 2);
+}
+
+int main() {
+    mainMenu();
+    return 0;
+}
 
