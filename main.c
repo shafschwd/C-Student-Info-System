@@ -41,6 +41,7 @@ void inputAndRegisterUser() {
     char password[50];
     char role[50];
     int roleChoice;
+    int result; // to store the result of scanf
 
     // Read the current count from the file
     FILE *countFile = fopen("count.txt", "r");
@@ -73,26 +74,34 @@ void inputAndRegisterUser() {
     // Validate role
     do {
         printf("Choose role:\n1. Student\n2. Programme administrator\n3. Lecturer\n4. System Administrator\n");
-        scanf("%d", &roleChoice);
+        result = scanf("%d", &roleChoice);
 
-        switch(roleChoice) {
-            case 1:
-                strcpy(role, "STD");
-                break;
-            case 2:
-                strcpy(role, "PAD");
-                break;
-            case 3:
-                strcpy(role, "LCT");
-                break;
-            case 4:
-                strcpy(role, "SAD");
-                break;
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 4.\n");
-                roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
+        if (result == 1 && getchar() == '\n') {
+            switch(roleChoice) {
+                case 1:
+                    strcpy(role, "STD");
+                    break;
+                case 2:
+                    strcpy(role, "PAD");
+                    break;
+                case 3:
+                    strcpy(role, "LCT");
+                    break;
+                case 4:
+                    strcpy(role, "SAD");
+                    break;
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                    roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
+            }
+        } else {
+            printf("Invalid input. Please enter a number.\n");
+            // Clear the input buffer
+            while (getchar() != '\n');
+            roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
         }
     } while (roleChoice == 0);
+
 
     registerUser(userNumber, username, password, role);
     printf("User registered successfully. Your user number is %d.\n", userNumber);
@@ -201,6 +210,22 @@ void readSpecificUser(int userNumber) {
     }
 }
 
+// Function to check if a user exists
+int userExists(int userNumber) {
+    User user;
+    FILE *file = fopen("users.txt", "r");
+    if (file != NULL) {
+        while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role) != EOF) {
+            if (user.userNumber == userNumber) {
+                fclose(file);
+                return 1;
+            }
+        }
+        fclose(file);
+    }
+    return 0;
+}
+
 
 // Function to create a user
 void createUser() {
@@ -208,7 +233,6 @@ void createUser() {
     inputAndRegisterUser();
 }
 
-// Function to modify a user
 void modifyUser() {
     int userNumber;
     char newUsername[50];
@@ -216,13 +240,29 @@ void modifyUser() {
     char newRole[50];
     int roleChoice;
     int choice;
+    int result; // to store the result of scanf
 
     printf("Enter user number of the user to modify: ");
-    scanf("%d", &userNumber);
+    result = scanf("%d", &userNumber);
+    if (result != 1 || getchar() != '\n') {
+        printf("Invalid input. Please enter a number.\n");
+        clearInputBuffer();
+        return;
+    }
+
+    if (!userExists(userNumber)) {
+        printf("Error: User does not exist.\n");
+        return;
+    }
 
     do {
         printf("What do you want to modify?\n1. Username\n2. Password\n3. User role\n4. Back to modify user\n");
-        scanf("%d", &choice);
+        result = scanf("%d", &choice);
+        if (result != 1 || getchar() != '\n') {
+            printf("Invalid input. Please enter a number.\n");
+            clearInputBuffer();
+            continue;
+        }
 
         switch(choice) {
             case 1:
@@ -238,25 +278,34 @@ void modifyUser() {
                 printf("Password updated successfully.\n");
                 break;
             case 3:
-                printf("Enter new role:\n1. Student\n2. Programme administrator\n3. Lecturer\n4. System Administrator\n");
-                scanf("%d", &roleChoice);
-                switch(roleChoice) {
-                    case 1:
-                        strcpy(newRole, "STD");
-                        break;
-                    case 2:
-                        strcpy(newRole, "PAD");
-                        break;
-                    case 3:
-                        strcpy(newRole, "LCT");
-                        break;
-                    case 4:
-                        strcpy(newRole, "SAD");
-                        break;
-                    default:
-                        printf("Invalid role. Please enter a number between 1 and 4.\n");
-                        return;
-                }
+                do {
+                    printf("Enter new role:\n1. Student\n2. Programme administrator\n3. Lecturer\n4. System Administrator\n");
+                    result = scanf("%d", &roleChoice);
+                    if (result == 1 && getchar() == '\n') {
+                        switch(roleChoice) {
+                            case 1:
+                                strcpy(newRole, "STD");
+                                break;
+                            case 2:
+                                strcpy(newRole, "PAD");
+                                break;
+                            case 3:
+                                strcpy(newRole, "LCT");
+                                break;
+                            case 4:
+                                strcpy(newRole, "SAD");
+                                break;
+                            default:
+                                printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                                roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
+                        }
+                    } else {
+                        printf("Invalid input. Please enter a number.\n");
+                        // Clear the input buffer
+                        while (getchar() != '\n');
+                        roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
+                    }
+                } while (roleChoice == 0);
                 updateUserRole(userNumber, newRole);
                 printf("User role updated successfully.\n");
                 break;
@@ -267,7 +316,7 @@ void modifyUser() {
                 printf("Invalid choice. Please enter a number between 1 and 4.\n");
                 break;
         }
-    } while((choice>0)&&(choice <=4));
+    } while(choice != 4);
 }
 
 void readAllUsers() {
@@ -319,7 +368,7 @@ void deleteUser() {
 void userManagementMenu() {
     int choice;
     int userNumber;
-
+    int result; // to store the result of scanf
     do {
         printf("\n********** User Management Menu **********\n");
         printf("1. Create User\n");
@@ -330,39 +379,47 @@ void userManagementMenu() {
         printf("6. Exit\n");
         printf("**************************\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        result = scanf("%d", &choice);
 
-        switch(choice) {
-            case 1:
-                createUser();
-                break;
-            case 2:
-                modifyUser();
-                break;
-            case 3:
-                readAllUsers();
-                break;
-            case 4:
-                printf("Enter user number: ");
-                scanf("%d", &userNumber);
-                readSpecificUser(userNumber);
-                break;
-            case 5:
-                deleteUser();
-                break;
-            case 6:
-                printf("Exiting...\n");
-                return;
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 6.\n");
-                break;
+        // Check if the input was a number and there are no extra characters
+        if (result == 1 && getchar() == '\n') {
+            switch(choice) {
+                case 1:
+                    createUser();
+                    break;
+                case 2:
+                    modifyUser();
+                    break;
+                case 3:
+                    readAllUsers();
+                    break;
+                case 4:
+                    printf("Enter user number: ");
+                    scanf("%d", &userNumber);
+                    readSpecificUser(userNumber);
+                    break;
+                case 5:
+                    deleteUser();
+                    break;
+                case 6:
+                    printf("Exiting...\n");
+                    return;  // Return from the function when logout is selected
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 6.\n");
+                    break;
+            }
+        } else {
+            printf("Invalid input. Please enter a number.\n");
+            // Clear the input buffer
+            clearInputBuffer();
         }
-    } while(choice != 6);
+    } while(1);
 }
 
 // Function to display menus
 void studentMenu() {
     int choice;
+    int result; // to store the result of scanf
     do {
         printf("\n********** Student Menu **********\n");
         printf("1. View Courses\n");
@@ -372,33 +429,41 @@ void studentMenu() {
         printf("5. Logout\n");
         printf("**************************\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        result = scanf("%d", &choice);
 
-        switch(choice) {
-            case 1:
-//                viewCourses();
-                break;
-            case 2:
-//                enrollInCourse();
-                break;
-            case 3:
-//                dropCourse();
-                break;
-            case 4:
-//                viewGrades();
-                break;
-            case 5:
-                printf("Logging out...\n");
-                return;  // Return from the function when logout is selected
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 2.\n");
-                break;
+        // Check if the input was a number and there are no extra characters
+        if (result == 1 && getchar() == '\n') {
+            switch(choice) {
+                case 1:
+                    // viewCourses();
+                    break;
+                case 2:
+                    // enrollInCourse();
+                    break;
+                case 3:
+                    // dropCourse();
+                    break;
+                case 4:
+                    // viewGrades();
+                    break;
+                case 5:
+                    printf("Logging out...\n");
+                    return;  // Return from the function when logout is selected
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                    break;
+            }
+        } else {
+            printf("Invalid input. Please enter a number.\n");
+            // Clear the input buffer
+            clearInputBuffer();
         }
-    } while(choice != 5);
+    } while(1);
 }
 
 void programmeAdminMenu() {
     int choice;
+    int result; // to store the result of scanf
     do {
         printf("\n********** Programme Administrator Menu **********\n");
         printf("1. Add Course\n");
@@ -408,33 +473,41 @@ void programmeAdminMenu() {
         printf("5. Logout\n");
         printf("**************************\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        result = scanf("%d", &choice);
 
-        switch(choice) {
-            case 1:
-//                addCourse();
-                break;
-            case 2:
-//                modifyCourse();
-                break;
-            case 3:
-//                deleteCourse();
-                break;
-            case 4:
-//                viewAllCourses();
-                break;
-            case 5:
-                printf("Logging out...\n");
-                return;  // Return from the function when logout is selected
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 5.\n");
-                break;
+        // Check if the input was a number and there are no extra characters
+        if (result == 1 && getchar() == '\n') {
+            switch(choice) {
+                case 1:
+                    // addCourse();
+                    break;
+                case 2:
+                    // modifyCourse();
+                    break;
+                case 3:
+                    // deleteCourse();
+                    break;
+                case 4:
+                    // viewAllCourses();
+                    break;
+                case 5:
+                    printf("Logging out...\n");
+                    return;  // Return from the function when logout is selected
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                    break;
+            }
+        } else {
+            printf("Invalid input. Please enter a number.\n");
+            // Clear the input buffer
+            clearInputBuffer();
         }
-    } while(choice != 5);
+    } while(1);
 }
 
 void lecturerMenu() {
     int choice;
+    int result; // to store the result of scanf
     do {
         printf("\n********** Lecturer Menu **********\n");
         printf("1. View Courses\n");
@@ -444,29 +517,36 @@ void lecturerMenu() {
         printf("5. Logout\n");
         printf("**************************\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        result = scanf("%d", &choice);
 
-        switch(choice) {
-            case 1:
-//                viewCourses();
-                break;
-            case 2:
-//                addGrades();
-                break;
-            case 3:
-//                modifyGrades();
-                break;
-            case 4:
-//                viewAllStudents();
-                break;
-            case 5:
-                printf("Logging out...\n");
-                return;  // Return from the function when logout is selected
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 5.\n");
-                break;
+        // Check if the input was a number and there are no extra characters
+        if (result == 1 && getchar() == '\n') {
+            switch(choice) {
+                case 1:
+                    // viewCourses();
+                    break;
+                case 2:
+                    // addGrades();
+                    break;
+                case 3:
+                    // modifyGrades();
+                    break;
+                case 4:
+                    // viewAllStudents();
+                    break;
+                case 5:
+                    printf("Logging out...\n");
+                    return;  // Return from the function when logout is selected
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                    break;
+            }
+        } else {
+            printf("Invalid input. Please enter a number.\n");
+            // Clear the input buffer
+            clearInputBuffer();
         }
-    } while(choice != 5);
+    } while(1);
 }
 
 void systemAdminMenu() {
