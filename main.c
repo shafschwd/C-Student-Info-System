@@ -26,7 +26,7 @@ void registerUser(int userNumber, char *username, char *password, char *role){
     strcpy(newUser.password, password);
     strcpy(newUser.role, role);
 
-    FILE *file = fopen("../users.txt", "a");
+    FILE *file = fopen("users.txt", "a");
     if (file != NULL) {
         fprintf(file, "%d %s %s \"%s\"\n", newUser.userNumber, newUser.username, newUser.password, newUser.role);
         fclose(file);
@@ -43,7 +43,7 @@ void inputAndRegisterUser() {
     int roleChoice;
 
     // Read the current count from the file
-    FILE *countFile = fopen("../count.txt", "r");
+    FILE *countFile = fopen("count.txt", "r");
     if (countFile == NULL || fscanf(countFile, "%d", &userNumber) != 1) {
         // If the file doesn't exist or is empty, start from 1
         userNumber = 1;
@@ -102,7 +102,7 @@ void inputAndRegisterUser() {
 // Function to validate user credentials
 int validateCredentials(char *username, char *password) {
     User user;
-    FILE *file = fopen("../users.txt", "r");
+    FILE *file = fopen("users.txt", "r");
     if (file != NULL) {
         while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role) != EOF) {
             if (strcmp(user.username, username) == 0 && strcmp(user.password, password) == 0) {
@@ -118,7 +118,7 @@ int validateCredentials(char *username, char *password) {
 // Function to update username
 void updateUsername(int userNumber, char *newUsername) {
     User user;
-    FILE *file = fopen("../users.txt", "r+");
+    FILE *file = fopen("users.txt", "r+");
     FILE *tempFile = fopen("temp.txt", "w");
     char line[256];
     if (file != NULL && tempFile != NULL) {
@@ -131,15 +131,15 @@ void updateUsername(int userNumber, char *newUsername) {
         }
         fclose(file);
         fclose(tempFile);
-        remove("../users.txt");
-        rename("temp.txt", "../users.txt");
+        remove("users.txt");
+        rename("temp.txt", "users.txt");
     }
 }
 
 // Function to update password
 void updatePassword(int userNumber, char *newPassword) {
     User user;
-    FILE *file = fopen("../users.txt", "r+");
+    FILE *file = fopen("users.txt", "r+");
     FILE *tempFile = fopen("temp.txt", "w");
     char line[256];
     if (file != NULL && tempFile != NULL) {
@@ -152,15 +152,15 @@ void updatePassword(int userNumber, char *newPassword) {
         }
         fclose(file);
         fclose(tempFile);
-        remove("../users.txt");
-        rename("temp.txt", "../users.txt");
+        remove("users.txt");
+        rename("temp.txt", "users.txt");
     }
 }
 
 // Function to update user role
 void updateUserRole(int userNumber, char *newRole) {
     User user;
-    FILE *file = fopen("../users.txt", "r+");
+    FILE *file = fopen("users.txt", "r+");
     FILE *tempFile = fopen("temp.txt", "w");
     char line[256];
     if (file != NULL && tempFile != NULL) {
@@ -173,15 +173,15 @@ void updateUserRole(int userNumber, char *newRole) {
         }
         fclose(file);
         fclose(tempFile);
-        remove("../users.txt");
-        rename("temp.txt", "../users.txt");
+        remove("users.txt");
+        rename("temp.txt", "users.txt");
     }
 }
 
 // Function to read a specific user's details
 void readSpecificUser(int userNumber) {
     User user;
-    FILE *file = fopen("../users.txt", "r");
+    FILE *file = fopen("users.txt", "r");
     char line[256];
     if (file != NULL) {
         while (fgets(line, sizeof(line), file)) {
@@ -272,7 +272,7 @@ void modifyUser() {
 
 void readAllUsers() {
     User user;
-    FILE *file = fopen("../users.txt", "r");
+    FILE *file = fopen("users.txt", "r");
     if (file != NULL) {
         printf("UserNumber Username Password Role\n");
         while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role) != EOF) {
@@ -280,7 +280,7 @@ void readAllUsers() {
         }
         fclose(file);
     } else {
-        printf("Unable to open users.txt\n");
+        printf("Unable to opusers.txt\n");
     }
 }
 
@@ -290,7 +290,7 @@ void deleteUser() {
     printf("Enter user number of the user to delete: ");
     scanf("%d", &userNumber);
 
-    FILE *file = fopen("../users.txt", "r");
+    FILE *file = fopen("users.txt", "r");
     FILE *tempFile = fopen("temp.txt", "w");
     User user;
     int userExists = 0; // flag to check if user exists
@@ -305,8 +305,8 @@ void deleteUser() {
         }
         fclose(file);
         fclose(tempFile);
-        remove("../users.txt");
-        rename("temp.txt", "../users.txt");
+        remove("users.txt");
+        rename("temp.txt", "users.txt");
     }
     if (userExists) {
         printf("User deleted successfully.\n");
@@ -521,7 +521,7 @@ int loginSystem() {
 
     // Read user role
     User user;
-    FILE *file = fopen("../users.txt", "r");
+    FILE *file = fopen("users.txt", "r");
     char line[256];
     if (file != NULL) {
         while (fgets(line, sizeof(line), file)) {
