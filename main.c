@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 
+ // Function to clear the input buffer
+void clearInputBuffer() {
+    int ch;
+    while ((ch = getchar()) != '\n' && ch != EOF);
+}
+
 // Define the User structure
 // Define the User structure
 typedef struct {
@@ -52,32 +58,41 @@ void inputAndRegisterUser() {
     fprintf(countFile, "%d", userNumber);
     fclose(countFile);
 
-    printf("Enter username: ");
-    scanf("%s", username);
+    // Validate username
+    do {
+        printf("Enter username (must be between 1 and 50 characters): ");
+        scanf("%s", username);
+    } while (strlen(username) < 1 || strlen(username) > 50);
 
-    printf("Enter password: ");
-    scanf("%s", password);
+    // Validate password
+    do {
+        printf("Enter password (must be between 1 and 50 characters): ");
+        scanf("%s", password);
+    } while (strlen(password) < 1 || strlen(password) > 50);
 
-    printf("Choose role:\n1. Student\n2. Programme administrator\n3. Lecturer\n4. System Administrator\n");
-    scanf("%d", &roleChoice);
+    // Validate role
+    do {
+        printf("Choose role:\n1. Student\n2. Programme administrator\n3. Lecturer\n4. System Administrator\n");
+        scanf("%d", &roleChoice);
 
-    switch(roleChoice) {
-        case 1:
-            strcpy(role, "STD");
-            break;
-        case 2:
-            strcpy(role, "PAD");
-            break;
-        case 3:
-            strcpy(role, "LCT");
-            break;
-        case 4:
-            strcpy(role, "SAD");
-            break;
-        default:
-            printf("Invalid choice. Please enter a number between 1 and 4.\n");
-            return;
-    }
+        switch(roleChoice) {
+            case 1:
+                strcpy(role, "STD");
+                break;
+            case 2:
+                strcpy(role, "PAD");
+                break;
+            case 3:
+                strcpy(role, "LCT");
+                break;
+            case 4:
+                strcpy(role, "SAD");
+                break;
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
+        }
+    } while (roleChoice == 0);
 
     registerUser(userNumber, username, password, role);
     printf("User registered successfully. Your user number is %d.\n", userNumber);
@@ -252,7 +267,7 @@ void modifyUser() {
                 printf("Invalid choice. Please enter a number between 1 and 4.\n");
                 break;
         }
-    } while(choice != 4);
+    } while((choice>0)&&(choice <=4));
 }
 
 void readAllUsers() {
@@ -339,10 +354,10 @@ void userManagementMenu() {
                 printf("Exiting...\n");
                 return;
             default:
-                printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                printf("Invalid choice. Please enter a number between 1 and 6.\n");
                 break;
         }
-    } while(choice != 5);
+    } while(choice != 6);
 }
 
 // Function to display menus
@@ -456,38 +471,37 @@ void lecturerMenu() {
 
 void systemAdminMenu() {
     int choice;
+    int result; // to store the result of scanf
     do {
         printf("\n********** System Administrator Menu **********\n");
         printf("1. User Management\n");
         printf("2. Logout\n");
         printf("**************************\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        result = scanf("%d", &choice);
 
-        switch(choice) {
-            case 1:
-                userManagementMenu();
-                break;
-            case 5:
-//                modifyUser();
-                break;
-            case 3:
-//                deleteUser();
-                break;
-            case 4:
-//                viewAllUsers();
-                break;
-            case 2:
-                printf("Logging out...\n");
-                return;  // Return from the function when logout is selected
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 5.\n");
-                break;
+        // Check if the input was a number and there are no extra characters
+        if (result == 1 && getchar() == '\n') {
+            switch(choice) {
+                case 1:
+                    userManagementMenu();
+                    break;
+                case 2:
+                    printf("Logging out...\n");
+                    return;  // Return from the function when logout is selected
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 2.\n");
+                    break;
+            }
+        } else {
+            printf("Invalid input. Please enter a number.\n");
+            // Clear the input buffer
+            clearInputBuffer();
         }
-    } while(choice != 5);
+    } while(1);
 }
 
-void loginSystem() {
+int loginSystem() {
     char username[50];
     char password[50];
     int loginSuccess = 0;
@@ -529,36 +543,48 @@ void loginSystem() {
     } else if (strcmp(user.role, "SAD") == 0) {
         systemAdminMenu();
     }
+
+    return 1; // return 1 if login is successful
 }
 
 void mainMenu() {
     int choice;
     int exitProgram = 0; // flag to check if user wants to exit the program
-
+    int result; // to store the result of scanf
+    int loginSuccess = 0; // flag to check if user has successfully logged in
     do {
         printf("\n********** STUDENT-INFORMATION-SYSTEM **********\n");
         printf("1. Login\n");
         printf("2. Exit\n");
         printf("**************************\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        result = scanf("%d", &choice);
 
-        switch(choice) {
-            case 1:
-                loginSystem();
-                printf("Do you want to exit the program? (1 for yes, 0 for no): ");
-                scanf("%d", &exitProgram);
-                if (exitProgram == 1) {
+        // Check if the input was a number and there are no extra characters
+        if (result == 1 && getchar() == '\n') {
+            switch(choice) {
+                case 1:
+                    loginSuccess = loginSystem();
+                    if (loginSuccess == 1) {
+                        printf("Do you want to exit the program? (1 for yes, 0 for no): ");
+                        scanf("%d", &exitProgram);
+                        if (exitProgram == 1) {
+                            printf("Exiting...\n");
+                            return; // If user wants to exit the program, return from the function
+                        }
+                    }
+                    break;
+                case 2:
                     printf("Exiting...\n");
-                    return; // If user wants to exit the program, return from the function
-                }
-                break;
-            case 2:
-                printf("Exiting...\n");
-                return;  // Return from the function when exit is selected
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 2.\n");
-                break;
+                    return;  // Return from the function when exit is selected
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 2.\n");
+                    break;
+            }
+        } else {
+            printf("Invalid input. Please enter a number.\n");
+            // Clear the input buffer
+            while (getchar() != '\n');
         }
     } while(choice != 2);
 }
