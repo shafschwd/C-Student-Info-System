@@ -3,7 +3,9 @@
 
 // Define a structure for student
 struct Student {
+    char id[4];
     char name[50];
+    char courseId[7];
     char enrolledCourses[5][50];
     int grades[5];
     float CGPA;
@@ -12,112 +14,102 @@ struct Student {
 
 // Function prototypes
 void viewPersonalDetails(struct Student student);
-void viewEnrolledCourses(struct Student student);
-void viewGrades(struct Student student);
-void viewCGPA(struct Student student);
+void viewCourseDetails(struct Student student);
 void viewAttendance(struct Student student);
+void readStudentProfiles(struct Student students[], int *numStudents);
 
 int main() {
-    // Sample data of students (can be replaced with a database)
-    struct Student students[6] = {
-            {"John", {"Math", "English", "Physics", "History", "Biology"}, {90, 85, 75, 80, 95}, 0, {95, 90, 85, 80, 75}},
-            {"Jane", {"Chemistry", "Literature", "Computer Science", "Geography", "Art"}, {85, 80, 95, 90, 75}, 0, {90, 85, 80, 95, 70}},
-            {"Alice", {"Economics", "Psychology", "Calculus II", "Anthropology", "Political Science"}, {88, 92, 85, 90, 87}, 0, {85, 90, 88, 85, 80}},
-            {"Bob", {"Math", "Physics", "Chemistry", "Biology", "Geology"}, {92, 85, 90, 87, 82}, 0, {90, 85, 88, 82, 85}},
-            {"Emily", {"History", "Literature", "Geography", "Political Science", "Economics"}, {80, 85, 90, 87, 88}, 0, {85, 90, 88, 82, 85}},
-            {"David", {"Computer Science", "Math", "Physics", "Chemistry", "Biology"}, {85, 90, 87, 82, 88}, 0, {90, 85, 88, 82, 85}}
-    };
+    // Sample data of students
+    struct Student students[6];
+    int numStudents = 0;
+    readStudentProfiles(students, &numStudents);
 
     // Menu-driven system
     int choice;
-    int studentIndex;
+    char studentName[50];
     do {
         printf("\n-- Student Information System --\n");
-        printf("Select a student:\n");
-        printf("0. John\n");
-        printf("1. Jane\n");
-        printf("2. Alice\n");
-        printf("3. Bob\n");
-        printf("4. Emily\n");
-        printf("5. David\n");
-        printf("6. Exit\n");
-        printf("Enter your choice: ");
-        scanf("%d", &studentIndex);
+        printf("Enter the student's name (or 'exit' to quit): ");
+        scanf("%s", studentName);
 
-        if (studentIndex < 0 || studentIndex > 5) {
-            printf("Invalid student index. Please try again.\n");
+        if (strcmp(studentName, "exit") == 0) {
+            printf("Exiting...\n");
+            break;
+        }
+
+        int studentIndex = -1;
+        for (int i = 0; i < numStudents; ++i) {
+            if (strcmp(students[i].name, studentName) == 0) {
+                studentIndex = i;
+                break;
+            }
+        }
+
+        if (studentIndex == -1) {
+            printf("Student not found. Please try again.\n");
             continue;
         }
 
-        printf("\n-- Options for %s --\n", students[studentIndex].name);
-        printf("1. View Personal Details\n");
-        printf("2. View Enrolled Courses\n");
-        printf("3. View Grades\n");
-        printf("4. View CGPA\n");
-        printf("5. View Attendance\n");
-        printf("6. Exit\n");
-        printf("Enter your choice: ");
-        scanf("%d", &choice);
+        do {
+            printf("\n-- Options for %s --\n", students[studentIndex].name);
+            printf("1. View Personal Details\n");
+            printf("2. View Enrolled Courses, Grades, and CGPA\n");
+            printf("3. View Attendance\n");
+            printf("4. Exit\n");
+            printf("Enter your choice: ");
+            scanf(" %d", &choice);
 
-        switch(choice) {
-            case 1:
-                viewPersonalDetails(students[studentIndex]);
-                break;
-            case 2:
-                viewEnrolledCourses(students[studentIndex]);
-                break;
-            case 3:
-                viewGrades(students[studentIndex]);
-                break;
-            case 4:
-                viewCGPA(students[studentIndex]);
-                break;
-            case 5:
-                viewAttendance(students[studentIndex]);
-                break;
-            case 6:
-                printf("Exiting...\n");
-                break;
-            default:
-                printf("Invalid choice. Please try again.\n");
-        }
-    } while(choice != 6); // Keep looping until the user chooses to exit
+            switch(choice) {
+                case 1:
+                    viewPersonalDetails(students[studentIndex]);
+                    break;
+                case 2:
+                    viewCourseDetails(students[studentIndex]);
+                    break;
+                case 3:
+                    viewAttendance(students[studentIndex]);
+                    break;
+                case 4:
+                    printf("Exiting...\n");
+                    break;
+                default:
+                    printf("Invalid choice. Please try again.\n");
+            }
+        } while(choice != 4);
+    } while(strcmp(studentName, "exit") != 0);
 
     return 0;
+}
+
+// Function to read student profiles from file
+void readStudentProfiles(struct Student students[], int *numStudents) {
+    FILE *file = fopen("student_profiles.txt", "r");
+    if (file) {
+        while ((*numStudents) < 6 && fscanf(file, "%3[^,],%49[^,],%6[^,\n]", students[*numStudents].id, students[*numStudents].name, students[*numStudents].courseId) == 3) {
+
+            (*numStudents)++;
+        }
+        fclose(file);
+    } else {
+        printf("Error reading student_profiles.txt file.\n");
+    }
 }
 
 // Function to view personal details of a student
 void viewPersonalDetails(struct Student student) {
     printf("\n-- Personal Details --\n");
     printf("Name: %s\n", student.name);
-    // Add more personal details to display as needed
+    printf("Student ID: %s\n", student.id);
+    printf("Course ID: %s\n", student.courseId);
 }
 
-// Function to view enrolled courses of a student
-void viewEnrolledCourses(struct Student student) {
-    printf("\n-- Enrolled Courses --\n");
+// Function to view enrolled courses, grades, and CGPA of a student
+void viewCourseDetails(struct Student student) {
+    printf("\n-- Enrolled Courses, Grades, and CGPA --\n");
     for(int i = 0; i < 5; i++) {
-        printf("%d. %s\n", i+1, student.enrolledCourses[i]);
+        printf("Course: %s\n", student.enrolledCourses[i]);
+        printf("Grade: %d\n", student.grades[i]);
     }
-}
-
-// Function to view grades of a student
-void viewGrades(struct Student student) {
-    printf("\n-- Grades --\n");
-    for(int i = 0; i < 5; i++) {
-        printf("%s: %d\n", student.enrolledCourses[i], student.grades[i]);
-    }
-}
-
-// Function to calculate and view CGPA of a student
-void viewCGPA(struct Student student) {
-    printf("\n-- CGPA --\n");
-    float totalCredits = 0, totalGradePoints = 0;
-    for(int i = 0; i < 5; i++) {
-        totalCredits += 3; // Assuming each course has 3 credits
-        totalGradePoints += student.grades[i];
-    }
-    student.CGPA = totalGradePoints / totalCredits;
     printf("CGPA: %.2f\n", student.CGPA);
 }
 
@@ -125,6 +117,7 @@ void viewCGPA(struct Student student) {
 void viewAttendance(struct Student student) {
     printf("\n-- Attendance --\n");
     for(int i = 0; i < 5; i++) {
-        printf("%s: %d%%\n", student.enrolledCourses[i], student.attendance[i]);
+        printf("Course: %s\n", student.enrolledCourses[i]);
+        printf("Attendance: %d%%\n", student.attendance[i]);
     }
 }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
  // Function to clear the input buffer
 void clearInputBuffer() {
@@ -8,27 +9,48 @@ void clearInputBuffer() {
 }
 
 // Define the User structure
-// Define the User structure
 typedef struct {
-    int userNumber;
+    int userID;
     char username[50];
     char password[50];
     char role[50];
 } User;
 
+// Function to check if a user exists
+int userExists(int userID) {
+    FILE *file = fopen("users.txt", "r");
+    if (file == NULL) {
+        printf("Error: Could not open users.txt\n");
+        exit(1);
+    }
+
+    User user;
+    char line[256];
+    while (fgets(line, sizeof(line), file)) {
+        sscanf(line, "%d %s %s \"%[^\"]\"", &user.userID, user.username, user.password, user.role);
+        if (user.userID == userID) {
+            fclose(file);
+            return 1;
+        }
+    }
+
+    fclose(file);
+    return 0;
+}
+
 
 
 // Function to register a new user
-void registerUser(int userNumber, char *username, char *password, char *role){
+void registerUser(int userID, char *username, char *password, char *role){
     User newUser;
-    newUser.userNumber = userNumber;
+    newUser.userID = userID;
     strcpy(newUser.username, username);
     strcpy(newUser.password, password);
     strcpy(newUser.role, role);
 
     FILE *file = fopen("users.txt", "a");
     if (file != NULL) {
-        fprintf(file, "%d %s %s \"%s\"\n", newUser.userNumber, newUser.username, newUser.password, newUser.role);
+        fprintf(file, "%d %s %s \"%s\"\n", newUser.userID, newUser.username, newUser.password, newUser.role);
         fclose(file);
     }
 }
@@ -36,28 +58,32 @@ void registerUser(int userNumber, char *username, char *password, char *role){
 
 
 void inputAndRegisterUser() {
-    int userNumber;
+    int userID;
     char username[50];
     char password[50];
     char role[50];
     int roleChoice;
     int result; // to store the result of scanf
 
-    // Read the current count from the file
-    FILE *countFile = fopen("count.txt", "r");
-    if (countFile == NULL || fscanf(countFile, "%d", &userNumber) != 1) {
-        // If the file doesn't exist or is empty, start from 1
-        userNumber = 1;
-    } else {
-        // Otherwise, increment the count
-        userNumber++;
-    }
-    fclose(countFile);
-
-    // Update the count file with the new count
-    countFile = fopen("count.txt", "w");
-    fprintf(countFile, "%d", userNumber);
-    fclose(countFile);
+    // Ask for the user number
+    do {
+        printf("Enter a unique user number (3 digits): ");
+        result = scanf("%d", &userID);
+        if (result != 1 || getchar() != '\n') {
+            printf("Invalid input. Please enter a number.\n");
+            clearInputBuffer();
+            continue;
+        }
+        if (userID < 100 || userID > 999) {
+            printf("Invalid input. Please enter a 3-digit number.\n");
+            continue;
+        }
+        if (userExists(userID)) {
+            printf("Error: User number already exists. Please enter a different number.\n");
+            continue;
+        }
+        break;
+    } while(1);
 
     // Validate username
     do {
@@ -103,40 +129,46 @@ void inputAndRegisterUser() {
     } while (roleChoice == 0);
 
 
-    registerUser(userNumber, username, password, role);
-    printf("User registered successfully. Your user number is %d.\n", userNumber);
+    registerUser(userID, username, password, role);
+    printf("User registered successfully. Your user number is %d.\n", userID);
 }
 
 
+
 // Function to validate user credentials
-int validateCredentials(char *username, char *password) {
+int validateCredentials(int userID, char *password) {
     User user;
     FILE *file = fopen("users.txt", "r");
     if (file != NULL) {
-        while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role) != EOF) {
-            if (strcmp(user.username, username) == 0 && strcmp(user.password, password) == 0) {
+        while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userID, user.username, user.password, user.role) != EOF) {
+            printf("Debug: Read userID = %d, username = %s, password = %s, role = %s\n", user.userID, user.username, user.password, user.role); // Print debugging information
+            if (user.userID == userID) {
                 fclose(file);
-                return 1;
+                if (strcmp(user.password, password) == 0) {
+                    return 1; // userID and password match
+                } else {
+                    return 0; // userID matches but password does not
+                }
             }
         }
         fclose(file);
     }
-    return 0;
+    return -1; // userID not found
 }
 
 // Function to update username
-void updateUsername(int userNumber, char *newUsername) {
+void updateUsername(int userID, char *newUsername) {
     User user;
     FILE *file = fopen("users.txt", "r+");
     FILE *tempFile = fopen("temp.txt", "w");
     char line[256];
     if (file != NULL && tempFile != NULL) {
         while (fgets(line, sizeof(line), file)) {
-            scanf(line, "%d %s %s %s", &user.userNumber, user.username, user.password, user.role);
-            if (user.userNumber == userNumber) {
+            scanf(line, "%d %s %s %s", &user.userID, user.username, user.password, user.role);
+            if (user.userID == userID) {
                 strcpy(user.username, newUsername);
             }
-            fprintf(tempFile, "%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
+            fprintf(tempFile, "%d %s %s %s\n", user.userID, user.username, user.password, user.role);
         }
         fclose(file);
         fclose(tempFile);
@@ -146,18 +178,18 @@ void updateUsername(int userNumber, char *newUsername) {
 }
 
 // Function to update password
-void updatePassword(int userNumber, char *newPassword) {
+void updatePassword(int userID, char *newPassword) {
     User user;
     FILE *file = fopen("users.txt", "r+");
     FILE *tempFile = fopen("temp.txt", "w");
     char line[256];
     if (file != NULL && tempFile != NULL) {
         while (fgets(line, sizeof(line), file)) {
-            sscanf(line, "%d %s %s %s", &user.userNumber, user.username, user.password, user.role);
-            if (user.userNumber == userNumber) {
+            sscanf(line, "%d %s %s %s", &user.userID, user.username, user.password, user.role);
+            if (user.userID == userID) {
                 strcpy(user.password, newPassword);
             }
-            fprintf(tempFile, "%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
+            fprintf(tempFile, "%d %s %s %s\n", user.userID, user.username, user.password, user.role);
         }
         fclose(file);
         fclose(tempFile);
@@ -167,18 +199,18 @@ void updatePassword(int userNumber, char *newPassword) {
 }
 
 // Function to update user role
-void updateUserRole(int userNumber, char *newRole) {
+void updateUserRole(int userID, char *newRole) {
     User user;
     FILE *file = fopen("users.txt", "r+");
     FILE *tempFile = fopen("temp.txt", "w");
     char line[256];
     if (file != NULL && tempFile != NULL) {
         while (fgets(line, sizeof(line), file)) {
-            sscanf(line, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role);
-            if (user.userNumber == userNumber) {
+            sscanf(line, "%d %s %s \"%[^\"]\"", &user.userID, user.username, user.password, user.role);
+            if (user.userID == userID) {
                 strcpy(user.role, newRole);
             }
-            fprintf(tempFile, "%d %s %s \"%s\"\n", user.userNumber, user.username, user.password, user.role);
+            fprintf(tempFile, "%d %s %s \"%s\"\n", user.userID, user.username, user.password, user.role);
         }
         fclose(file);
         fclose(tempFile);
@@ -188,15 +220,15 @@ void updateUserRole(int userNumber, char *newRole) {
 }
 
 // Function to read a specific user's details
-void readSpecificUser(int userNumber) {
+void readSpecificUser(int userID) {
     User user;
     FILE *file = fopen("users.txt", "r");
     char line[256];
     if (file != NULL) {
         while (fgets(line, sizeof(line), file)) {
-            sscanf(line, "%d %s %s %s", &user.userNumber, user.username, user.password, user.role);
-            if (user.userNumber == userNumber) {
-                printf("User Number: %d\n", user.userNumber);
+            sscanf(line, "%d %s %s %s", &user.userID, user.username, user.password, user.role);
+            if (user.userID == userID) {
+                printf("User Number: %d\n", user.userID);
                 printf("Username: %s\n", user.username);
                 printf("Password: %s\n", user.password);
                 printf("Role: %s\n", user.role);
@@ -210,22 +242,6 @@ void readSpecificUser(int userNumber) {
     }
 }
 
-// Function to check if a user exists
-int userExists(int userNumber) {
-    User user;
-    FILE *file = fopen("users.txt", "r");
-    if (file != NULL) {
-        while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role) != EOF) {
-            if (user.userNumber == userNumber) {
-                fclose(file);
-                return 1;
-            }
-        }
-        fclose(file);
-    }
-    return 0;
-}
-
 
 // Function to create a user
 void createUser() {
@@ -234,7 +250,7 @@ void createUser() {
 }
 
 void modifyUser() {
-    int userNumber;
+    int userID;
     char newUsername[50];
     char newPassword[50];
     char newRole[50];
@@ -243,78 +259,79 @@ void modifyUser() {
     int result; // to store the result of scanf
 
     printf("Enter user number of the user to modify: ");
-    result = scanf("%d", &userNumber);
+    result = scanf("%d", &userID);
     if (result != 1 || getchar() != '\n') {
         printf("Invalid input. Please enter a number.\n");
         clearInputBuffer();
         return;
     }
 
-    if (!userExists(userNumber)) {
-        printf("Error: User does not exist.\n");
+    if (!userExists(userID)) {
+        printf("Error: User number does not exist. Please enter a valid user number.\n");
         return;
     }
 
     do {
         printf("What do you want to modify?\n1. Username\n2. Password\n3. User role\n4. Back to modify user\n");
         result = scanf("%d", &choice);
-        if (result != 1 || getchar() != '\n') {
-            printf("Invalid input. Please enter a number.\n");
-            clearInputBuffer();
-            continue;
-        }
-
-        switch(choice) {
-            case 1:
-                printf("Enter new username: ");
-                scanf("%s", newUsername);
-                updateUsername(userNumber, newUsername);
-                printf("Username updated successfully.\n");
-                break;
-            case 2:
-                printf("Enter new password: ");
-                scanf("%s", newPassword);
-                updatePassword(userNumber, newPassword);
-                printf("Password updated successfully.\n");
-                break;
-            case 3:
-                do {
-                    printf("Enter new role:\n1. Student\n2. Programme administrator\n3. Lecturer\n4. System Administrator\n");
-                    result = scanf("%d", &roleChoice);
-                    if (result == 1 && getchar() == '\n') {
-                        switch(roleChoice) {
-                            case 1:
-                                strcpy(newRole, "STD");
-                                break;
-                            case 2:
-                                strcpy(newRole, "PAD");
-                                break;
-                            case 3:
-                                strcpy(newRole, "LCT");
-                                break;
-                            case 4:
-                                strcpy(newRole, "SAD");
-                                break;
-                            default:
-                                printf("Invalid choice. Please enter a number between 1 and 4.\n");
-                                roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
+        if (result == 1 && getchar() == '\n') {
+            switch(choice) {
+                case 1:
+                    printf("Enter new username: ");
+                    scanf("%s", newUsername);
+                    updateUsername(userID, newUsername);
+                    printf("Username updated successfully.\n");
+                    break;
+                case 2:
+                    printf("Enter new password: ");
+                    scanf("%s", newPassword);
+                    updatePassword(userID, newPassword);
+                    printf("Password updated successfully.\n");
+                    break;
+                case 3:
+                    do {
+                        printf("Enter new role:\n1. Student\n2. Programme administrator\n3. Lecturer\n4. System Administrator\n");
+                        result = scanf("%d", &roleChoice);
+                        if (result == 1 && getchar() == '\n') {
+                            switch(roleChoice) {
+                                case 1:
+                                    strcpy(newRole, "STD");
+                                    break;
+                                case 2:
+                                    strcpy(newRole, "PAD");
+                                    break;
+                                case 3:
+                                    strcpy(newRole, "LCT");
+                                    break;
+                                case 4:
+                                    strcpy(newRole, "SAD");
+                                    break;
+                                default:
+                                    printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                                    roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
+                            }
+                        } else {
+                            printf("Invalid input. Please enter a number.\n");
+                            // Clear the input buffer
+                            while (getchar() != '\n');
+                            roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
                         }
-                    } else {
-                        printf("Invalid input. Please enter a number.\n");
-                        // Clear the input buffer
-                        while (getchar() != '\n');
-                        roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
-                    }
-                } while (roleChoice == 0);
-                updateUserRole(userNumber, newRole);
-                printf("User role updated successfully.\n");
-                break;
-            case 4:
-                printf("Returning to modify user...\n");
-                break;
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 4.\n");
-                break;
+                    } while (roleChoice == 0);
+                    updateUserRole(userID, newRole);
+                    printf("User role updated successfully.\n");
+                    break;
+                case 4:
+                    printf("Returning to modify user...\n");
+                    break;
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                    break;
+            }
+        } else {
+            printf("Invalid input. Please enter a number.\n");
+            // Clear the input buffer
+            while (getchar() != '\n');
+            roleChoice = 0;  // Reset roleChoice to 0 to continue the loop
         }
     } while(choice != 4);
 }
@@ -324,8 +341,8 @@ void readAllUsers() {
     FILE *file = fopen("users.txt", "r");
     if (file != NULL) {
         printf("UserNumber Username Password Role\n");
-        while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role) != EOF) {
-            printf("%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
+        while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userID, user.username, user.password, user.role) != EOF) {
+            printf("%d %s %s %s\n", user.userID, user.username, user.password, user.role);
         }
         fclose(file);
     } else {
@@ -335,21 +352,21 @@ void readAllUsers() {
 
 // Function to delete a user
 void deleteUser() {
-    int userNumber;
+    int userID;
     printf("Enter user number of the user to delete: ");
-    scanf("%d", &userNumber);
+    scanf("%d", &userID);
 
     FILE *file = fopen("users.txt", "r");
     FILE *tempFile = fopen("temp.txt", "w");
     User user;
     int userExists = 0; // flag to check if user exists
     if (file != NULL && tempFile != NULL) {
-        while (fscanf(file, "%d %s %s %s\n", &user.userNumber, user.username, user.password, user.role) != EOF) {
-            if (user.userNumber == userNumber) {
+        while (fscanf(file, "%d %s %s %s\n", &user.userID, user.username, user.password, user.role) != EOF) {
+            if (user.userID == userID) {
                 userExists = 1; // set flag to true if user is found
             }
-            if (user.userNumber != userNumber) {
-                fprintf(tempFile, "%d %s %s %s\n", user.userNumber, user.username, user.password, user.role);
+            if (user.userID != userID) {
+                fprintf(tempFile, "%d %s %s %s\n", user.userID, user.username, user.password, user.role);
             }
         }
         fclose(file);
@@ -367,7 +384,7 @@ void deleteUser() {
 
 void userManagementMenu() {
     int choice;
-    int userNumber;
+    int userID;
     int result; // to store the result of scanf
     do {
         printf("\n********** User Management Menu **********\n");
@@ -395,8 +412,8 @@ void userManagementMenu() {
                     break;
                 case 4:
                     printf("Enter user number: ");
-                    scanf("%d", &userNumber);
-                    readSpecificUser(userNumber);
+                    scanf("%d", &userID);
+                    readSpecificUser(userID);
                     break;
                 case 5:
                     deleteUser();
@@ -414,6 +431,27 @@ void userManagementMenu() {
             clearInputBuffer();
         }
     } while(1);
+}
+
+void GradingSystem() {
+    FILE *file = fopen("grading_system.txt", "r");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    char markRange[10];
+    char grade[3];
+    float cgpa;
+
+    printf("%-10s|%-8s|%-5s\n", "Mark", "Grade", "CGPA"); // Print the header
+    printf("-------------------------\n"); // Print a separator line
+
+    while (fscanf(file, "%9s %2s %f", markRange, grade, &cgpa) == 3) {
+        printf("%-10s|%-8s|%-5.2f\n", markRange, grade, cgpa); // Print each row
+    }
+
+    fclose(file);
 }
 
 // Function to display menus
@@ -555,7 +593,8 @@ void systemAdminMenu() {
     do {
         printf("\n********** System Administrator Menu **********\n");
         printf("1. User Management\n");
-        printf("2. Logout\n");
+        printf("2. Grading System\n");
+        printf("4. Logout\n");
         printf("**************************\n");
         printf("Enter your choice: ");
         result = scanf("%d", &choice);
@@ -567,10 +606,13 @@ void systemAdminMenu() {
                     userManagementMenu();
                     break;
                 case 2:
+                    GradingSystem();
+                    break;
+                case 4:
                     printf("Logging out...\n");
                     return;  // Return from the function when logout is selected
                 default:
-                    printf("Invalid choice. Please enter a number between 1 and 2.\n");
+                    printf("Invalid choice. Please enter a number between 1 and 4.\n");
                     break;
             }
         } else {
@@ -581,23 +623,39 @@ void systemAdminMenu() {
     } while(1);
 }
 
+// login system
 int loginSystem() {
-    char username[50];
+    int userID;
     char password[50];
-    int loginSuccess = 0;
+    int loginResult = 0;
 
     // Login system
     do {
-        printf("Enter username: ");
-        scanf("%s", username);
-        printf("Enter password: ");
-        scanf("%s", password);
-
-        loginSuccess = validateCredentials(username, password);
-        if (!loginSuccess) {
-            printf("Invalid username or password. Please try again.\n");
+        printf("Enter userID: ");
+        if(scanf("%d", &userID) != 1) {
+            printf("Invalid userID. Please try again.\n");
+            clearInputBuffer();
+            continue;
         }
-    } while (!loginSuccess);
+        getchar(); // Read and discard the newline character
+
+        printf("Enter password: ");
+        if(scanf("%49s", password) != 1) {
+            printf("Invalid password. Please try again.\n");
+            clearInputBuffer();
+            continue;
+        }
+        getchar(); // Read and discard the newline character
+
+        loginResult = validateCredentials(userID, password);
+        if (loginResult == -1) {
+            printf("Invalid userID. Please try again.\n");
+        } else if (loginResult == 0) {
+            printf("Invalid password. Please try again.\n");
+        }
+    } while (loginResult != 1);
+
+
 
     // Read user role
     User user;
@@ -605,8 +663,8 @@ int loginSystem() {
     char line[256];
     if (file != NULL) {
         while (fgets(line, sizeof(line), file)) {
-            sscanf(line, "%d %s %s \"%[^\"]\"", &user.userNumber, user.username, user.password, user.role);
-            if (strcmp(user.username, username) == 0 && strcmp(user.password, password) == 0) {
+            sscanf(line, "%d %s %s \"%[^\"]\"", &user.userID, user.username, user.password, user.role);
+            if (user.userID == userID) {
                 break;
             }
         }
