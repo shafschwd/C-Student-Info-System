@@ -10,7 +10,7 @@
 #define MAX_LINE 100
 
 typedef struct {
-    char studentID[8];
+    int userID;
     char name[50];
     char coursesEnrolled[MAX_COURSES][MAX_COURSE_CODE_LENGTH]; // Array to store course codes
     int numCoursesEnrolled; // Number of courses enrolled by the student
@@ -86,7 +86,7 @@ int main() {
 void readStudentProfiles(Student students[], int *numStudents) {
     FILE *file = fopen("student_profiles.txt", "r");
     if (file == NULL) {
-        perror("Error opening file for reading.\n");
+        printf("Error opening file for reading.\n");
         return;
     }
 
@@ -94,8 +94,8 @@ void readStudentProfiles(Student students[], int *numStudents) {
 
     // Read each line from the file and parse student data
     while (*numStudents < MAX_STUDENTS &&
-           fscanf(file, "%7[^,],%49[^,\n],", students[*numStudents].studentID, students[*numStudents].name) == 2) {
-
+           fscanf(file, "%d,%49[^,\n],", &students[*numStudents].userID, students[*numStudents].name) == 2) {
+    
         // Read course enrollment data
         students[*numStudents].numCoursesEnrolled = 0;
         char courseCode[MAX_COURSE_CODE_LENGTH];
@@ -115,15 +115,16 @@ void readStudentProfiles(Student students[], int *numStudents) {
 
 
 
+
 void writeStudentProfiles(Student students[], int numStudents) {
-    FILE *file = fopen("../student_profiles.txt", "w");
+    FILE *file = fopen("student_profiles.txt", "w");
     if (file == NULL) {
         printf("Error opening file for writing.\n");
         return;
     }
 
     for (int i = 0; i < numStudents; i++) {
-        fprintf(file, "%s,%s", students[i].studentID, students[i].name);
+        fprintf(file, "%d,%s", students[i].userID, students[i].name);
         // Write course enrollment data
         for (int j = 0; j < students[i].numCoursesEnrolled; j++) {
             fprintf(file, ",%s", students[i].coursesEnrolled[j]);
@@ -141,7 +142,7 @@ void viewStudentProfiles(Student students[], int numStudents) {
     printf("ID\tName\t\tCourses Enrolled\n");
 
     for (int i = 0; i < numStudents; i++) {
-        printf("%s\t%s\t\t", students[i].studentID, students[i].name);
+        printf("%d\t%s\t\t", students[i].userID, students[i].name);
         for (int j = 0; j < students[i].numCoursesEnrolled; j++) {
             printf("%s", students[i].coursesEnrolled[j]);
             if (j < students[i].numCoursesEnrolled - 1) {
@@ -370,18 +371,20 @@ void enrollStudents() {
 
     // Continuously enroll students until the user decides to stop
     while (1) {
-        char studentID[8], name[MAX_NAME];
+        int userID;
+        char name[MAX_NAME];
         printf("Enter student ID (or 'b' to stop): ");
-        scanf("%s", studentID);
+        if (scanf("%d", &userID) != 1)
+            break;
 
-        if (strcmp(studentID, "b") == 0 || strcmp(studentID, "B") == 0)
+        if (userID == 'b' || userID == 'B')
             break;
 
         printf("Enter student name: ");
         scanf("%s", name);
 
         // Write student details and enrolled course to the file
-        fprintf(studentFile, "%s,%s,%s\n", studentID, name, courseCode);
+        fprintf(studentFile, "%d,%s,%s\n", userID, name, courseCode);
     }
 
     fclose(studentFile);
@@ -486,7 +489,7 @@ void assignLecturer() {
     // Prompt user to enter the name of the lecturer
     printf("Enter the name of the lecturer: ");
     char lecturerName[MAX_NAME];
-    scanf("%s", lecturerName);
+    scanf(" %[^\n]", lecturerName);
     getchar(); // Clear the input buffer
 
     // Update the course_info file with the lecturer information
