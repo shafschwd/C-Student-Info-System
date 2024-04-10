@@ -6,7 +6,3 @@
 6 nicole 1234 "STD"
 7 yuhuang 1234 "STD"
 8 sam 1234 "STD"
-9 lucas 1234 "SAD"
-10 naruto 1234 "STD"
-11 william 1234 "STD"
-12 weiye 1234 "STD"
