@@ -10,7 +10,7 @@
 #define MAX_LINE 100
 
 typedef struct {
-    char studentID[8];
+    int userID;
     char name[50];
     char coursesEnrolled[MAX_COURSES][MAX_COURSE_CODE_LENGTH]; // Array to store course codes
     int numCoursesEnrolled; // Number of courses enrolled by the student
@@ -25,7 +25,6 @@ typedef struct {
 
 // Function prototypes
 void readStudentProfiles(Student students[], int *numStudents);
-void writeStudentProfiles(Student students[], int numStudents);
 void viewStudentProfiles(Student students[], int numStudents);
 void updateCourseInFile(const Course *course, const char *lecturerName);
 void viewAndUpdateCourseInfo();
@@ -47,12 +46,13 @@ int main() {
         printf("4. Assign Lecturer with Specific Course\n");
         printf("5. Logout\n");
         printf("Enter your choice: ");
-        
+
         // Check if the input is an integer
         if (scanf("%d", &choice) != 1) {
+            // Clear the invalid input from the input buffer
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             printf("Invalid input. Please enter a number.\n");
-            // Clear input buffer
-            while (getchar() != '\n');
             continue;
         }
 
@@ -66,14 +66,14 @@ int main() {
                 break;
             case 3:
                 enrollStudents();
-                
+
                 break;
             case 4:
                 assignLecturer();
                 break;
             case 5:
                 printf("Logged out successfully.\n");
-                
+
                 break;
             default:
                 printf("Invalid choice. Please enter a valid option.\n");
@@ -86,7 +86,7 @@ int main() {
 void readStudentProfiles(Student students[], int *numStudents) {
     FILE *file = fopen("student_profiles.txt", "r");
     if (file == NULL) {
-        perror("Error opening file for reading.\n");
+        printf("Error opening file for reading.\n");
         return;
     }
 
@@ -94,7 +94,7 @@ void readStudentProfiles(Student students[], int *numStudents) {
 
     // Read each line from the file and parse student data
     while (*numStudents < MAX_STUDENTS &&
-           fscanf(file, "%7[^,],%49[^,\n],", students[*numStudents].studentID, students[*numStudents].name) == 2) {
+           fscanf(file, "%d,%49[^,\n],", &students[*numStudents].userID, students[*numStudents].name) == 2) {
 
         // Read course enrollment data
         students[*numStudents].numCoursesEnrolled = 0;
@@ -112,36 +112,12 @@ void readStudentProfiles(Student students[], int *numStudents) {
 
 
 
-
-
-
-void writeStudentProfiles(Student students[], int numStudents) {
-    FILE *file = fopen("../student_profiles.txt", "w");
-    if (file == NULL) {
-        printf("Error opening file for writing.\n");
-        return;
-    }
-
-    for (int i = 0; i < numStudents; i++) {
-        fprintf(file, "%s,%s", students[i].studentID, students[i].name);
-        // Write course enrollment data
-        for (int j = 0; j < students[i].numCoursesEnrolled; j++) {
-            fprintf(file, ",%s", students[i].coursesEnrolled[j]);
-        }
-        fprintf(file, "\n"); // Add newline character after each student entry
-    }
-
-    fclose(file);
-}
-
-
-
 void viewStudentProfiles(Student students[], int numStudents) {
     printf("Student Profiles:\n");
     printf("ID\tName\t\tCourses Enrolled\n");
 
     for (int i = 0; i < numStudents; i++) {
-        printf("%s\t%s\t\t", students[i].studentID, students[i].name);
+        printf("%d\t%s\t\t", students[i].userID, students[i].name);
         for (int j = 0; j < students[i].numCoursesEnrolled; j++) {
             printf("%s", students[i].coursesEnrolled[j]);
             if (j < students[i].numCoursesEnrolled - 1) {
@@ -228,7 +204,7 @@ void viewAndUpdateCourseInfo() {
         while (fscanf(file, "%9[^,],%49[^,],%d,%49[^\n]%*c", course.courseCode, course.courseName, &course.numStudentsEnrolled, course.lecturerName) == 4) {
             printf("%-8s%-40s%-15d%-s\n", course.courseCode, course.courseName, course.numStudentsEnrolled, course.lecturerName);
         }
-        
+
         // Close the file
         fclose(file);
 
@@ -243,7 +219,7 @@ void viewAndUpdateCourseInfo() {
                 scanf("%s", inputCode);
                 if (strcmp(inputCode, "b") == 0 || strcmp(inputCode, "B") == 0)
                     break;
-            
+
                 // Find the course to update
                 int found = 0;
                 file = fopen("course_info.txt", "r");
@@ -251,7 +227,7 @@ void viewAndUpdateCourseInfo() {
                     printf("Error opening file for reading.\n");
                     return;
                 }
-            
+
                 while (fscanf(file, "%9[^,],%49[^,],%d,%49[^\n]%*c", course.courseCode, course.courseName, &course.numStudentsEnrolled, course.lecturerName) == 4) {
                     if (strcmp(course.courseCode, inputCode) == 0) {
                         found = 1;
@@ -259,12 +235,12 @@ void viewAndUpdateCourseInfo() {
                     }
                 }
                 fclose(file);
-            
+
                 if (!found) {
                     printf("Course code not found. Please try again.\n");
                     continue;
                 }
-            
+
                 // Loop until a valid choice is made
                 while (1) {
                     // Display the course information to be updated
@@ -275,7 +251,7 @@ void viewAndUpdateCourseInfo() {
                     printf("Enter your choice: ");
                     int updateOption;
                     scanf("%d", &updateOption);
-                
+
                     // Update the course information in the file
                     switch (updateOption) {
                         case 1:
@@ -299,10 +275,10 @@ void viewAndUpdateCourseInfo() {
                     break; // Break out of the loop if a valid choice is made
                 }
 
-            
+
                 updateCourseInFile(&course, lecturerName);
                 printf("Course information updated successfully.\n");
-            
+
             }  while  (1); // Loop until the user chooses to go back
         }
     } while (inputChoice == 'y' || inputChoice == 'Y'); // Loop until the user chooses not to update any more courses
@@ -326,8 +302,6 @@ void enrollStudents() {
     while (fscanf(file, "%9[^,],%49[^,],%d,%49[^\n]%*c", course.courseCode, course.courseName, &course.numStudentsEnrolled, course.lecturerName) == 4) {
         printf("%-8s%-40s%-15d%-s\n", course.courseCode, course.courseName, course.numStudentsEnrolled, course.lecturerName);
     }
-        
-    // Close the file
     fclose(file);
 
     // Prompt user to enter the course code to enroll students
@@ -336,8 +310,10 @@ void enrollStudents() {
         printf("\nEnter the course code to enroll students (or 'b' to go back): ");
         scanf("%s", courseCode);
 
-        if (strcmp(courseCode, "b") == 0 || strcmp(courseCode, "B") == 0)
+        if (strcmp(courseCode, "b") == 0 || strcmp(courseCode, "B") == 0) {
+            printf("Returning to main menu.\n");
             return;
+        }
 
         // Check if the entered course code exists
         int courseFound = 0;
@@ -361,6 +337,11 @@ void enrollStudents() {
             printf("Course code not found. Please try again.\n");
     }
 
+    // Read existing student profiles to check for duplicate IDs
+    int numStudents = 0;
+    Student students[MAX_STUDENTS];
+    readStudentProfiles(students, &numStudents);
+
     // Open the student_profiles.txt file to enroll students
     FILE *studentFile = fopen("student_profiles.txt", "a"); // Open in append mode
     if (studentFile == NULL) {
@@ -370,25 +351,59 @@ void enrollStudents() {
 
     // Continuously enroll students until the user decides to stop
     while (1) {
-        char studentID[8], name[MAX_NAME];
+        char input[10];
         printf("Enter student ID (or 'b' to stop): ");
-        scanf("%s", studentID);
+        scanf("%9s", input);
 
-        if (strcmp(studentID, "b") == 0 || strcmp(studentID, "B") == 0)
+        // Check if the user wants to stop
+        if (strcmp(input, "b") == 0 || strcmp(input, "B") == 0) {
             break;
+        }
 
+        // Convert the input to an integer
+        int userID = atoi(input);
+
+        // Validate the user ID
+        if (userID < 100 || userID > 999) {
+            printf("User ID must be between 100 and 999. Please try again.\n");
+            continue;
+        }
+
+        // Check if the user ID is already in use
+        int idInUse = 0;
+        for (int i = 0; i < numStudents; i++) {
+            if (students[i].userID == userID) {
+                idInUse = 1;
+                break;
+            }
+        }
+
+        if (idInUse) {
+            printf("User ID %d is already in use. Please enter a different user ID.\n", userID);
+            continue;
+        }
+
+        // Prompt for student name
+        char studentName[MAX_NAME];
         printf("Enter student name: ");
-        scanf("%s", name);
+        scanf("%49s", studentName);
 
-        // Write student details and enrolled course to the file
-        fprintf(studentFile, "%s,%s,%s\n", studentID, name, courseCode);
+        // Write the student information into the student_profiles.txt file
+        fprintf(studentFile, "%d,%s,%s\n", userID, studentName, courseCode);
+
+        // Add the newly enrolled student to the students array
+        students[numStudents].userID = userID;
+        strcpy(students[numStudents].name, studentName);
+        strcpy(students[numStudents].coursesEnrolled[students[numStudents].numCoursesEnrolled], courseCode);
+
+        numStudents++;
     }
 
+    // Close the student profiles file
     fclose(studentFile);
 
     // Update the student profiles in memory
-    int numStudents = 0;
-    Student students[MAX_STUDENTS];
+    // Re-read the student profiles file in case the list was updated
     readStudentProfiles(students, &numStudents);
 
     // Display the updated student profiles
@@ -400,15 +415,15 @@ void enrollStudents() {
         printf("Error opening course information file.\n");
         return;
     }
-    
+
     int found = 0;
     char fileCourseCode[MAX_CODE];
     char fileCourseName[MAX_NAME];
     int fileNumStudentsEnrolled;
-    
+
     // Rewind to the beginning of the file
     rewind(courseFile);
-    
+
     // Read each line from the file and parse course data
     while (fscanf(courseFile, "%9[^,],%49[^,],%d%*c", fileCourseCode, fileCourseName, &fileNumStudentsEnrolled) == 3) {
         // Compare the course code read from the file with the user input
@@ -421,7 +436,7 @@ void enrollStudents() {
             break;
         }
     }
-    
+
     fclose(courseFile);
 
     printf("Students enrolled successfully.\n");
@@ -429,10 +444,9 @@ void enrollStudents() {
 
 
 
-
 void assignLecturer() {
     printf("Assigning Lecturer with Specific Course...\n");
-    
+
     // Display the course information
     FILE *file = fopen("course_info.txt", "r");
     if (file == NULL) {
@@ -448,10 +462,10 @@ void assignLecturer() {
     while (fscanf(file, "%9[^,],%49[^,],%d,%49[^\n]%*c", course.courseCode, course.courseName, &course.numStudentsEnrolled, course.lecturerName) == 4) {
         printf("%-8s%-40s%-15d%-s\n", course.courseCode, course.courseName, course.numStudentsEnrolled, course.lecturerName);
     }
-        
+
     // Close the file
     fclose(file);
-    
+
     // Prompt user to enter the course code to assign lecturers
     char courseCode[MAX_CODE];
     while (1) {
@@ -482,11 +496,11 @@ void assignLecturer() {
         else
             printf("Course code not found. Please try again.\n");
     }
-    
+
     // Prompt user to enter the name of the lecturer
     printf("Enter the name of the lecturer: ");
     char lecturerName[MAX_NAME];
-    scanf("%s", lecturerName);
+    scanf(" %[^\n]", lecturerName);
     getchar(); // Clear the input buffer
 
     // Update the course_info file with the lecturer information

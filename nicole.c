@@ -22,7 +22,7 @@ void readGrades(struct Student *student);
 void calculateCGPA(struct Student *student);
 void readAttendance(struct Student *student);
 void viewPersonalDetails(struct Student student);
-void modifyPersonalDetails(struct Student *student);
+void modifyPersonalDetails(struct Student *student, int numStudents);
 void viewCourseDetails(struct Student student);
 void viewGrades(struct Student student);
 void viewAttendance(struct Student student);
@@ -77,7 +77,7 @@ int main() {
                     viewPersonalDetails(students[studentIndex]);
                     break;
                 case 2:
-                    modifyPersonalDetails(&students[studentIndex]);
+                    modifyPersonalDetails(&students[studentIndex], numStudents);
                     break;
                 case 3:
                     viewCourseDetails(students[studentIndex]);
@@ -172,13 +172,13 @@ void viewPersonalDetails(struct Student student) {
     printf("Name: %s\n", student.name);
     printf("Student ID: %d\n", student.userID);
     printf("Gender: %s\n", student.courseId);
-    printf("Email: %s\n", student.dob);
-    printf("Date of Birth: %s\n", student.email);
+    printf("Email: %s\n", student.email);
+    printf("Date of Birth: %s\n", student.dob);
     printf("Phone: %s\n", student.phone);
 }
 
 // Function to modify personal details of a student
-void modifyPersonalDetails(struct Student *student) {
+void modifyPersonalDetails(struct Student *student, int numStudents) {
     printf("\n-- Modify Personal Details --\n");
     printf("Enter new email address: ");
     scanf("%s", student->email);
@@ -190,8 +190,8 @@ void modifyPersonalDetails(struct Student *student) {
     FILE *file = fopen("personal_detail.txt", "w");
     if (file) {
         for (int i = 0; i < numStudents; i++) {
-            fprintf(file, "%d,%s,%s,%s,%s,%s\n", students[i].userID, students[i].name,
-                    students[i].courseId, students[i].email, students[i].dob, students[i].phone);
+            fprintf(file, "%d,%s,%s,%s,%s,%s\n", student[i].userID, student[i].name,
+                    student[i].courseId, student[i].email, student[i].dob, student[i].phone);
         }
         fclose(file);
     } else {
