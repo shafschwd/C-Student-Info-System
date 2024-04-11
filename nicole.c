@@ -22,10 +22,11 @@ void readGrades(struct Student *student);
 void calculateCGPA(struct Student *student);
 void readAttendance(struct Student *student);
 void viewPersonalDetails(struct Student student);
-void modifyPersonalDetails(struct Student *student, int numStudents);
+void modifyPersonalDetails(struct Student *students, int numStudents);
 void viewCourseDetails(struct Student student);
 void viewGrades(struct Student student);
 void viewAttendance(struct Student student);
+void writePersonalDetails(struct Student *students, int numStudents);
 
 int main() {
     // Sample data of students
@@ -77,7 +78,7 @@ int main() {
                     viewPersonalDetails(students[studentIndex]);
                     break;
                 case 2:
-                    modifyPersonalDetails(&students[studentIndex], numStudents);
+                    modifyPersonalDetails(students, numStudents);
                     break;
                 case 3:
                     viewCourseDetails(students[studentIndex]);
@@ -171,31 +172,53 @@ void viewPersonalDetails(struct Student student) {
     printf("\n-- Personal Details --\n");
     printf("Name: %s\n", student.name);
     printf("Student ID: %d\n", student.userID);
-    printf("Gender: %s\n", student.courseId);
+    printf("Course ID: %s\n", student.courseId);
     printf("Email: %s\n", student.email);
     printf("Date of Birth: %s\n", student.dob);
     printf("Phone: %s\n", student.phone);
 }
 
 // Function to modify personal details of a student
-void modifyPersonalDetails(struct Student *student, int numStudents) {
+void modifyPersonalDetails(struct Student *students, int numStudents) {
     printf("\n-- Modify Personal Details --\n");
+    int userID;
+    printf("Enter user ID of the student to modify: ");
+    scanf("%d", &userID);
+
+    int studentIndex = -1;
+    for (int i = 0; i < numStudents; ++i) {
+        if (students[i].userID == userID) {
+            studentIndex = i;
+            break;
+        }
+    }
+
+    if (studentIndex == -1) {
+        printf("Student not found. Please try again.\n");
+        return;
+    }
+
     printf("Enter new email address: ");
-    scanf("%s", student->email);
+    scanf("%s", students[studentIndex].email);
     printf("Enter new phone number: ");
-    scanf("%s", student->phone);
+    scanf("%s", students[studentIndex].phone);
     printf("Personal details modified successfully.\n");
 
-    // Write the modified details back to the file
+    // Write modified details back to file
+    writePersonalDetails(students, numStudents);
+}
+
+// Function to write personal details back to file after modification
+void writePersonalDetails(struct Student *students, int numStudents) {
     FILE *file = fopen("personal_detail.txt", "w");
     if (file) {
         for (int i = 0; i < numStudents; i++) {
-            fprintf(file, "%d,%s,%s,%s,%s,%s\n", student[i].userID, student[i].name,
-                    student[i].courseId, student[i].email, student[i].dob, student[i].phone);
+            fprintf(file, "%d,%s,%s,%s,%s,%s\n", students[i].userID, students[i].name,
+                    students[i].courseId, students[i].email, students[i].dob, students[i].phone);
         }
         fclose(file);
     } else {
-        printf("Error writing to personal_detail.txt file.\n");
+        printf("Error writing personal_detail.txt file.\n");
     }
 }
 
