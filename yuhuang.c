@@ -2,32 +2,38 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_CODE 10
-#define MAX_NAME 51
-#define MAX_LINE 256
-#define MAX_COURSE_ID 20
+#define MAX_CODE 11
+#define MAX_NAME 52
+#define MAX_LINE 257
+#define MAX_COURSE_ID 21
 #define MAX_COURSES 5
-#define MAX_COURSE_NAME 30
-#define MAX_ID 20
-#define MAX_GRADE 5
-#define MAX_ATTENDANCE 20
+#define MAX_COURSE_NAME 31
+#define MAX_ID 21
+#define MAX_GRADE 6
+#define MAX_ATTENDANCE 21
+#define MAX_CGPA 5
 
-// Structure definition
+
+
 typedef struct {
-    char courseCode[MAX_CODE];
+    char courseCode[MAX_CODE]; 
     char courseName[MAX_NAME];
     int numStudentsEnrolled;
     char lecturerName[MAX_NAME];
 } Course;
 
 typedef struct {
-    char studentID[MAX_ID];
+    int userID;
     char name[MAX_NAME];
     int numCoursesEnrolled;
     char coursesEnrolled[MAX_COURSES][MAX_COURSE_NAME];
 } Student;
 
-// Function prototypes
+int isValidUserID(const char* userID) {
+    int id = atoi(userID); // Convert string to integer
+    return id >= 100 && id <= 999; // Check if in range
+}
+
 void lecturerMenu();
 void viewGrades();
 void modifyGrades();
@@ -77,59 +83,62 @@ void lecturerMenu() {
     } while(choice != 5);
 }
 
+float getCGPA(const char* grade) {
+    // Placeholder for CGPA conversion logic.
+    return 4.0; // Example: assume all grades convert to 4.0.
+}
+
+// Validate the student ID is between 100 and 999.
+int isvalidUserID(const char* userID) {
+    int id = atoi(userID); // Convert string to integer.
+    return (id >= 100 && id <= 999);
+}
 
 void viewGrades() {
+    char targetStudentID[MAX_ID];
+    char line[MAX_LINE];
+    int validInput = 0;
+
+    while (!validInput) {
+        printf("Enter the student ID to view grades (or type 'exit' to return): ");
+        scanf("%s", targetStudentID);
+
+        if (strcmp(targetStudentID, "exit") == 0) return; // Exit if user types "exit".
+        
+        // Validate user ID.
+        if (!isValidUserID(targetStudentID)) {
+            printf("Invalid student ID. Please try again.\n");
+            continue; // Skip the rest of the loop and prompt again.
+        }
+
+        validInput = 1; // ID is valid, proceed.
+    }
+
     FILE* file = fopen("grades.txt", "r");
     if (!file) {
-        perror("Unable to open the file");
+        perror("Failed to open grades.txt");
         return;
     }
 
-    char targetStudentID[MAX_ID];
-    int validID = 0;  // Flag to ensure valid input is provided.
+    int found = 0;
+    printf("ID\tCourse Code\tGrade\tCGPA\n");
+    printf("----------------------------------------\n");
 
-    do {
-        printf("Enter the student ID to view grades (or type 'exit' to return): ");
-        scanf("%10s", targetStudentID);
-        if (strcmp(targetStudentID, "exit") == 0) {
-            fclose(file);
-            return;
+    while (fgets(line, sizeof(line), file) != NULL) {
+        char studentID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE], cgpaStr[MAX_CGPA];
+
+        // Updated to match the new file format.
+        if (sscanf(line, "%[^,],%[^,],%[^,],%s", studentID, courseCode, grade, cgpaStr) == 4 && strcmp(studentID, targetStudentID) == 0) {
+            printf("%s\t%s\t\t%s\t%s\n", studentID, courseCode, grade, cgpaStr);
+            found = 1;
         }
-
-        // Clear the input buffer.
-        while (getchar() != '\n');
-
-        char line[MAX_LINE];
-        int found = 0;  // To track if at least one grade record is found.
-
-        fseek(file, 0, SEEK_SET);  // Go back to the start of the file for each ID input.
-
-        while (fgets(line, sizeof(line), file)) {
-            // Remove possible newline character at the end of the line.
-            line[strcspn(line, "\n")] = 0;
-
-            char studentID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE];
-            // Adjusted the sscanf() to match the "StudentID,CourseCode,Grade" format.
-            if (sscanf(line, "%[^,],%[^,],%s", studentID, courseCode, grade) == 3) {
-                if (strcmp(studentID, targetStudentID) == 0) {
-                    if (!found) {
-                        printf("Grades for Student ID %s:\n", targetStudentID);
-                        printf("ID\tCourse Code\tGrade\n");
-                        printf("--------------------------------\n");
-                    }
-                    printf("%s\t%s\t\t%s\n", studentID, courseCode, grade);
-                    found = 1;  // Mark that we've found at least one record.
-                    validID = 1;  // Mark valid ID input to exit the loop.
-                }
-            }
-        }
-
-        if (!found) {
-            printf("Invalid student ID or no grades found, please try again.\n");
-        }
-    } while (!validID);
+    }
 
     fclose(file);
+
+    if (!found) {
+        printf("No grades found for student ID %s.\n", targetStudentID);
+    }
 }
 
 
@@ -164,6 +173,31 @@ int isValidStudentID(const char* studentID) {
     return 0;
 }
 
+float gradeToCGPA(const char* grade) {
+    if (strcmp(grade, "A+") == 0) return 4.00;
+    if (strcmp(grade, "A") == 0) return 3.70;
+    if (strcmp(grade, "B+") == 0) return 3.30;
+    if (strcmp(grade, "B") == 0) return 3.00;
+    if (strcmp(grade, "C+") == 0) return 2.70;
+    if (strcmp(grade, "C") == 0) return 2.30;
+    if (strcmp(grade, "C-") == 0) return 2.00;
+    if (strcmp(grade, "D") == 0) return 1.60;
+    if (strcmp(grade, "F") == 0) return 0.00;
+    return -1; // Invalid grade
+}
+
+// Validates if the grade entered is valid according to the specified ranges.
+int isvalidGrade(const char* grade) {
+    return gradeToCGPA(grade) != -1;
+}
+
+// Validates student ID to be in the range 100-999.
+int isvalidStudentID(const char* studentID) {
+    int id = atoi(studentID); // Convert string to integer
+    return id >= 100 && id <= 999;
+}
+
+// Checks if the course code exists in the grades file.
 int isValidCourseCode(const char* courseCode) {
     FILE* file = fopen("grades.txt", "r");
     if (!file) {
@@ -172,80 +206,87 @@ int isValidCourseCode(const char* courseCode) {
     }
 
     char line[MAX_LINE];
-    int isValid = 0; 
-
-    while (fgets(line, sizeof(line), file) != NULL) {
+    while (fgets(line, sizeof(line), file)) {
         char readCourseCode[MAX_COURSE_ID];
         sscanf(line, "%*[^,],%[^,]", readCourseCode);
         if (strcmp(readCourseCode, courseCode) == 0) {
-            isValid = 1;
-            break; 
+            fclose(file);
+            return 1;
         }
     }
-
     fclose(file);
-    return isValid;
+    return 0;
 }
-
 
 void modifyGrades() {
     char targetStudentID[MAX_ID];
     char targetCourseCode[MAX_COURSE_ID];
     char newGrade[MAX_GRADE];
+    float cgpa;
 
-    int validStudentID = 0;
-    int validCourseCode = 0;
-
-    while (!validStudentID) {
-        printf("Enter Student ID to modify grade: ");
-        scanf("%10s", targetStudentID);
-        getchar(); 
-        
-        if (isValidStudentID(targetStudentID)) {
-            validStudentID = 1;
-        } else {
-            printf("Invalid student ID, please try again.\n");
+    // Loop until a valid student ID is entered or the user decides to exit.
+    do {
+        printf("Enter Student ID to modify grade or 'exit' to cancel: ");
+        scanf("%s", targetStudentID);
+        if (strcmp(targetStudentID, "exit") == 0) {
+            return; // Early exit.
         }
-    }
-
-    while (!validCourseCode) {
-        printf("Enter Course Code: ");
-        scanf("%10s", targetCourseCode);
-        getchar();
-        
-        if (isValidCourseCode(targetCourseCode)) {
-            validCourseCode = 1;
+        if (!isValidStudentID(targetStudentID)) {
+            printf("Invalid student ID, must be between 100 and 999. Please try again.\n");
         } else {
+            break; // Valid ID entered.
+        }
+    } while (1);
+
+    // Loop until a valid course code is entered or the user decides to exit.
+    do {
+        printf("Enter Course Code or 'exit' to cancel: ");
+        scanf("%s", targetCourseCode);
+        if (strcmp(targetCourseCode, "exit") == 0) {
+            return; // Early exit.
+        }
+        if (!isValidCourseCode(targetCourseCode)) {
             printf("Invalid course code, please try again.\n");
-        }
-    }
-
-    while (1) {
-        printf("Enter new Grade (A+, A, B+, B, C+, C, C-, D, F): ");
-        scanf("%4s", newGrade);
-        getchar(); 
-
-        if (isValidGrade(newGrade)) {
-            break;
         } else {
-            printf("Invalid Grade, please try again.\n");
+            break; // Valid code entered.
         }
-    }
+    } while (1);
 
+    // Loop until a valid grade is entered or the user decides to exit.
+    do {
+        printf("Enter new Grade (A+, A, B+, B, C+, C, C-, D, F) or 'exit' to cancel: ");
+        scanf("%s", newGrade);
+        if (strcmp(newGrade, "exit") == 0) {
+            return; // Early exit.
+        }
+        if (!isValidGrade(newGrade)) {
+            printf("Invalid Grade, please try again.\n");
+        } else {
+            cgpa = gradeToCGPA(newGrade); // Calculate CGPA based on the grade.
+            break; // Valid grade entered.
+        }
+    } while (1);
+
+    // Proceed to modify the grades.txt file based on the input.
     FILE* file = fopen("grades.txt", "r");
     FILE* tempFile = fopen("temp_grades.txt", "w");
+    if (!file || !tempFile) {
+        perror("Error opening files");
+        return;
+    }
+
     char line[MAX_LINE];
     int found = 0;
-
     while (fgets(line, sizeof(line), file)) {
         char studentID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE];
-        sscanf(line, "%[^,],%[^,],%s", studentID, courseCode, grade);
-
-        if (strcmp(studentID, targetStudentID) == 0 && strcmp(courseCode, targetCourseCode) == 0) {
-            fprintf(tempFile, "%s,%s,%s\n", studentID, courseCode, newGrade);
-            found = 1;
-        } else {
-            fprintf(tempFile, "%s", line);
+        float fileCgpa;
+        if (sscanf(line, "%[^,],%[^,],%[^,],%f", studentID, courseCode, grade, &fileCgpa) == 4) {
+            if (strcmp(studentID, targetStudentID) == 0 && strcmp(courseCode, targetCourseCode) == 0) {
+                fprintf(tempFile, "%s,%s,%s,%.2f\n", studentID, courseCode, newGrade, cgpa); // Update record.
+                found = 1;
+            } else {
+                fputs(line, tempFile); // Copy line as is.
+            }
         }
     }
 
@@ -255,13 +296,12 @@ void modifyGrades() {
     if (found) {
         remove("grades.txt");
         rename("temp_grades.txt", "grades.txt");
-        printf("Updated Successfully.\n");
+        printf("Grade and CGPA updated successfully.\n");
     } else {
-        remove("temp_grades.txt"); 
         printf("No matching record found to update.\n");
+        remove("temp_grades.txt"); // Cleanup temporary file if no update was done.
     }
 }
-
 
 void viewAttendance() {
     FILE* file = fopen("attendance.txt", "r");
@@ -271,7 +311,7 @@ void viewAttendance() {
     }
 
     char targetStudentID[MAX_ID];
-    int validID = 0;  // Flag to ensure valid input is provided.
+    int validID = 0;  
 
     do {
         printf("Enter the student ID to view attendance (or type 'exit' to return): ");
@@ -281,16 +321,14 @@ void viewAttendance() {
             return;
         }
 
-        // Clear the input buffer.
         while (getchar() != '\n');
 
         char line[MAX_LINE];
-        int found = 0;  // To track if at least one attendance record is found.
+        int found = 0; 
 
-        fseek(file, 0, SEEK_SET);  // Go back to the start of the file for each ID input.
+        fseek(file, 0, SEEK_SET);  
 
         while (fgets(line, sizeof(line), file)) {
-            // Remove possible newline character at the end of the line.
             line[strcspn(line, "\n")] = 0;
 
             char studentID[MAX_ID], courseCode[MAX_COURSE_ID], attendance[MAX_ATTENDANCE];
@@ -302,8 +340,8 @@ void viewAttendance() {
                         printf("-----------------------------------\n");
                     }
                     printf("%s\t%s\t\t%s\n", studentID, courseCode, attendance);
-                    found = 1;  // Mark that we've found at least one record.
-                    validID = 1;  // Mark valid ID input to exit the loop.
+                    found = 1;  
+                    validID = 1;  
                 }
             }
         }
