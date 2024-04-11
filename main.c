@@ -2,10 +2,227 @@
 #include <string.h>
 #include <stdlib.h>
 
-//nicole part
+//nicole part start
+#define MAX_STUDENTS 6
+#define MAX_COURSES 5
+
+// Remove the erroneous declaration of gradeToPoint from the struct
+struct Student {
+    int userID;
+    char name[50];
+    char gender[7];
+    char email[50];
+    char dob[20];
+    char phone[15];
+    char enrolledCourses[MAX_COURSES][50];
+    char grades[MAX_COURSES][3];
+    float CGPA;
+    int attendance[MAX_COURSES];
+};
+
+// Declare gradeToPoint function before its first use
+float gradeToPoint(char* grade);
+
+
+void readPersonalDetails(struct Student *students, int *numStudents) {
+    FILE *file = fopen("personal_detail.txt", "r");
+    if (file) {
+        int i = 0;
+        while (fscanf(file, "%d,%49[^,],%6[^,],%49[^,],%19[^,],%14[^\n]",
+                      &students[i].userID, students[i].name, students[i].gender,
+                      students[i].email, students[i].dob, students[i].phone) == 6) {
+//            printf("Read student: %d %s\n", students[i].userID, students[i].name);
+            i++;
+        }
+        *numStudents = i;
+        fclose(file);
+    } else {
+        printf("Error reading personal_detail.txt file.\n");
+    }
+}
+
+void readGrades(struct Student *students, int numStudents) {
+    FILE *file = fopen("grades.txt", "r");
+    if (file) {
+        int userID;
+        char courseCode[10];
+        char grade[3]; // Updated size to accommodate grades as strings
+
+        while (fscanf(file, "%d,%[^,],%s", &userID, courseCode, grade) == 3) {
+//            printf("Read grade: %s for user %d in course %s\n", grade, userID, courseCode); // Debug print
+            for (int i = 0; i < numStudents; ++i) {
+                if (students[i].userID == userID) {
+                    for (int j = 0; j < MAX_COURSES; ++j) {
+                        if (strcmp(students[i].enrolledCourses[j], courseCode) == 0) {
+                            strcpy(students[i].grades[j], grade);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        fclose(file);
+    } else {
+        printf("Error reading grades.txt file.\n");
+    }
+}
+
+
+void readCourseDetails(struct Student *students, int numStudents) {
+    FILE *file = fopen("student_profiles.txt", "r");
+    if (file) {
+        int userID;
+        char name[50];
+        char courseCode[10]; // Adjusted buffer size for course codes
+        while (fscanf(file, "%d,%49[^,],%9[^\n]", &userID, name, courseCode) == 3) {
+//            printf("Read course: %s for user %d\n", courseCode, userID);
+            for (int i = 0; i < numStudents; ++i) {
+                if (students[i].userID == userID) {
+                    for (int j = 0; j < 5; ++j) {
+                        if (strlen(students[i].enrolledCourses[j]) == 0) {
+                            strcpy(students[i].enrolledCourses[j], courseCode);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        fclose(file);
+    } else {
+        printf("Error reading student_profiles.txt file.\n");
+    }
+}
 
 
 
+
+void readAttendance(struct Student *students, int numStudents) {
+    FILE *file = fopen("attendance.txt", "r");
+    if (file) {
+        int userID, attendanceIndex;
+        char courseCode[10];
+        char attendancePercentage[5];
+
+        while (fscanf(file, "%d,%9[^,],%s", &userID, courseCode, attendancePercentage) == 3) {
+            for (int i = 0; i < numStudents; ++i) {
+                if (students[i].userID == userID) {
+                    for (int j = 0; j < MAX_COURSES; ++j) {
+                        if (strcmp(students[i].enrolledCourses[j], courseCode) == 0) {
+                            students[i].attendance[j] = atoi(attendancePercentage);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        fclose(file);
+    } else {
+        printf("Error reading attendance.txt file.\n");
+    }
+}
+
+void viewPersonalDetails(struct Student student) {
+    printf("\n-- Personal Details --\n");
+    printf("Name: %s\n", student.name);
+    printf("Student ID: %d\n", student.userID);
+    printf("Gender: %s\n", student.gender);
+    printf("Email: %s\n", student.email);
+    printf("Date of Birth: %s\n", student.dob);
+    printf("Phone: %s\n", student.phone);
+}
+
+void writePersonalDetails(struct Student *students, int numStudents) {
+    FILE *file = fopen("personal_detail.txt", "w");
+    if (file) {
+        for (int i = 0; i < numStudents; i++) {
+            fprintf(file, "%d,%s,%s,%s,%s,%s\n", students[i].userID, students[i].name,
+                    students[i].gender, students[i].email, students[i].dob, students[i].phone);
+        }
+        fclose(file);
+    } else {
+        printf("Error writing personal_detail.txt file.\n");
+    }
+}
+
+
+
+void modifyPersonalDetails(struct Student *students, int numStudents, int userID) {
+    printf("\n-- Modify Personal Details --\n");
+
+    int studentIndex = -1;
+    for (int i = 0; i < numStudents; ++i) {
+        if (students[i].userID == userID) {
+            studentIndex = i;
+            break;
+        }
+    }
+
+    if (studentIndex == -1) {
+        printf("Student not found. Please try again.\n");
+        return;
+    }
+
+    printf("Enter new email address: ");
+    scanf("%s", students[studentIndex].email);
+    printf("Enter new phone number: ");
+    scanf("%s", students[studentIndex].phone);
+    printf("Personal details modified successfully.\n");
+
+    writePersonalDetails(students, numStudents);
+}
+
+void viewCourseGradesAndCGPA(struct Student student) {
+    printf("\n-- Enrolled Courses and Grades --\n");
+    int courseCount = 0;
+    float totalGradePoints = 0.0;
+    int totalCourses = 0;
+    for (int i = 0; i < MAX_COURSES; i++) {
+        if (strcmp(student.grades[i], "") != 0) {
+            printf("Course %d: %s, Grade: %s\n", ++courseCount, student.enrolledCourses[i], student.grades[i]);
+            totalCourses++;
+            totalGradePoints += gradeToPoint(student.grades[i]);
+            if (courseCount >= 2) // Limiting to only the first two courses
+                break;
+        }
+    }
+
+    printf("\n-- CGPA --\n");
+    if (totalCourses > 0) {
+        float CGPA = totalGradePoints / totalCourses;
+        printf("CGPA: %.2f\n", CGPA);
+    } else {
+        printf("No grades available to calculate CGPA.\n");
+    }
+}
+
+float gradeToPoint(char* grade) {
+    if (strcmp(grade, "A") == 0) return 4.0;
+    else if (strcmp(grade, "A-") == 0) return 3.7;
+    else if (strcmp(grade, "B+") == 0) return 3.3;
+    else if (strcmp(grade, "B") == 0) return 3.0;
+    else if (strcmp(grade, "B-") == 0) return 2.7;
+    else if (strcmp(grade, "C+") == 0) return 2.3;
+    else if (strcmp(grade, "C") == 0) return 2.0;
+    else if (strcmp(grade, "C-") == 0) return 1.7;
+    else if (strcmp(grade, "D+") == 0) return 1.3;
+    else if (strcmp(grade, "D") == 0) return 1.0;
+    else if (strcmp(grade, "F") == 0) return 0.0;
+    else return -1.0; // Invalid grade
+}
+
+
+void viewAttendance(struct Student student) {
+    printf("\n-- Attendance --\n");
+    for (int i = 0; i < MAX_COURSES; i++) {
+        printf("Course %d: %d%%\n", i + 1, student.attendance[i]);
+    }
+}
+
+
+
+//nicole part end
 
 
 // yuhuang part
@@ -254,7 +471,7 @@ void modifyGrades() {
     }
 }
 
-void viewAttendance() {
+void ltviewAttendance() {
     FILE* file = fopen("attendance.txt", "r");
     if (!file) {
         perror("Unable to open the file");
@@ -371,13 +588,13 @@ void updateAttendance() {
     }
 }
 
-
+//yuhuang part end
 
 
 
 
 //cy part
-#define MAX_COURSES 100
+#define MAX_COURSES 10
 #define MAX_COURSE_CODE_LENGTH 10
 #define MAX_STUDENTS 100
 #define MAX_NAME 50
@@ -389,37 +606,66 @@ typedef struct {
     char name[50];
     char coursesEnrolled[MAX_COURSES][MAX_COURSE_CODE_LENGTH]; // Array to store course codes
     int numCoursesEnrolled; // Number of courses enrolled by the student
-} student;
+}student;
 
 typedef struct {
     char courseCode[MAX_CODE];
     char courseName[MAX_NAME];
     int numStudentsEnrolled;
     char lecturerName[MAX_NAME];
-} course;
+}course;
 
-void readStudentProfiles(Student students[], int *numStudents) {
+void readStudentProfiles(Student *students, int *numStudents) {
     FILE *file = fopen("student_profiles.txt", "r");
     if (file == NULL) {
         printf("Error opening file for reading.\n");
         return;
     }
 
-    *numStudents = 0; // Initialize the number of students
+    char line[256];  // Buffer for each line from the file
+    while (fgets(line, sizeof(line), file)) {
+        char *token = strtok(line, ",");
+        if (token == NULL) continue;  // Skip invalid lines
 
-    // Read each line from the file and parse student data
-    while (*numStudents < MAX_STUDENTS &&
-           fscanf(file, "%d,%49[^,\n],", &students[*numStudents].userID, students[*numStudents].name) == 2) {
+        // Read student ID
+        int userID = atoi(token);
 
-        // Read course enrollment data
-        students[*numStudents].numCoursesEnrolled = 0;
-        char courseCode[MAX_COURSE_CODE_LENGTH];
-        while (fscanf(file, "%9[^,\n]", courseCode) == 1) {
-            strcpy(students[*numStudents].coursesEnrolled[students[*numStudents].numCoursesEnrolled], courseCode);
-            (students[*numStudents].numCoursesEnrolled)++;
+        // Read student name
+        token = strtok(NULL, ",");
+        if (token == NULL) continue;  // Skip invalid lines
+        char *name = token;
+
+        // Initialize a new student
+        Student student;
+        student.userID = userID;
+        strncpy(student.name, name, sizeof(student.name));
+        student.name[sizeof(student.name) - 1] = '\0'; // Null-terminate
+        student.numCoursesEnrolled = 0;
+
+        // Read courses
+        token = strtok(NULL, ",");
+        while (token != NULL) {
+            // Avoid buffer overflow
+            strncpy(student.coursesEnrolled[student.numCoursesEnrolled], token, sizeof(student.coursesEnrolled[student.numCoursesEnrolled]));
+            student.coursesEnrolled[student.numCoursesEnrolled][sizeof(student.coursesEnrolled[student.numCoursesEnrolled]) - 1] = '\0';
+            student.numCoursesEnrolled++;
+            token = strtok(NULL, ",");
         }
 
-        (*numStudents)++;
+        // Check for duplicate student ID before adding the student
+        int duplicate = 0;
+        for (int i = 0; i < *numStudents; i++) {
+            if (students[i].userID == student.userID) {
+                duplicate = 1;
+                break;
+            }
+        }
+
+        if (!duplicate) {
+            // Add the student to the students array if not a duplicate
+            students[*numStudents] = student;
+            (*numStudents)++;
+        }
     }
 
     fclose(file);
@@ -599,6 +845,35 @@ void viewAndUpdateCourseInfo() {
     } while (inputChoice == 'y' || inputChoice == 'Y'); // Loop until the user chooses not to update any more courses
 }
 
+void rewriteStudentProfiles(Student students[], int numStudents) {
+    // Open the file in write mode to clear existing data and rewrite the profiles
+    FILE *studentFile = fopen("student_profiles.txt", "w");
+    if (studentFile == NULL) {
+        printf("Error opening student profiles file for writing.\n");
+        return;
+    }
+
+    // Iterate through the student array and write each student's profile to the file
+    for (int i = 0; i < numStudents; i++) {
+        // Write the student ID and name
+        fprintf(studentFile, "%d,%s", students[i].userID, students[i].name);
+
+        // Write the courses enrolled
+        for (int j = 0; j < students[i].numCoursesEnrolled; j++) {
+            fprintf(studentFile, ",%s", students[i].coursesEnrolled[j]);
+        }
+
+        // Write a single newline after each student's data
+        fprintf(studentFile,"\n");
+    }
+
+    // Close the file
+    fclose(studentFile);
+}
+
+
+
+
 void enrollStudents() {
     printf("Enrolling Students into Specific Course...\n");
 
@@ -609,6 +884,7 @@ void enrollStudents() {
         return;
     }
 
+    // Define the Course structure and initialize it
     Course course;
     printf("\nCourse Information:\n");
     printf("Code\tName\t\t\t\tStudents Enrolled\tLecturer\n");
@@ -630,7 +906,7 @@ void enrollStudents() {
             return;
         }
 
-        // Check if the entered course code exists
+        // Check if the entered course code exists in the course_info file
         int courseFound = 0;
         file = fopen("course_info.txt", "r");
         if (file == NULL) {
@@ -646,10 +922,11 @@ void enrollStudents() {
         }
         fclose(file);
 
-        if (courseFound)
+        if (courseFound) {
             break; // Exit loop if course code is found
-        else
+        } else {
             printf("Course code not found. Please try again.\n");
+        }
     }
 
     // Read existing student profiles to check for duplicate IDs
@@ -684,42 +961,52 @@ void enrollStudents() {
             continue;
         }
 
-        // Check if the user ID is already in use
-        int idInUse = 0;
-        for (int i = 0; i < numStudents; i++) {
-            if (students[i].userID == userID) {
-                idInUse = 1;
-                break;
-            }
-        }
-
-        if (idInUse) {
-            printf("User ID %d is already in use. Please enter a different user ID.\n", userID);
-            continue;
-        }
-
         // Prompt for student name
         char studentName[MAX_NAME];
         printf("Enter student name: ");
         scanf("%49s", studentName);
 
-        // Write the student information into the student_profiles.txt file
-        fprintf(studentFile, "%d,%s,%s\n", userID, studentName, courseCode);
+        // Find or add the student in the array
+        int studentIndex = -1;
+        for (int i = 0; i < numStudents; i++) {
+            if (students[i].userID == userID) {
+                studentIndex = i;
+                break;
+            }
+        }
 
-        // Add the newly enrolled student to the students array
-        students[numStudents].userID = userID;
-        strcpy(students[numStudents].name, studentName);
-        strcpy(students[numStudents].coursesEnrolled[students[numStudents].numCoursesEnrolled], courseCode);
+        if (studentIndex == -1) {
+            // If student does not exist, add a new student
+            studentIndex = numStudents++;
+            students[studentIndex].userID = userID;
+            strcpy(students[studentIndex].name, studentName);
+            students[studentIndex].numCoursesEnrolled = 0;
+        }
 
-        numStudents++;
+        // Check if the student is already enrolled in the course
+        int alreadyEnrolled = 0;
+        for (int j = 0; j < students[studentIndex].numCoursesEnrolled; j++) {
+            if (strcmp(students[studentIndex].coursesEnrolled[j], courseCode) == 0) {
+                alreadyEnrolled = 1;
+                break;
+            }
+        }
+
+        if (alreadyEnrolled) {
+            printf("Student is already enrolled in the course. Please try again.\n");
+            continue;
+        }
+
+        // Enroll the student in the course
+        strcpy(students[studentIndex].coursesEnrolled[students[studentIndex].numCoursesEnrolled], courseCode);
+        students[studentIndex].numCoursesEnrolled++;
     }
 
     // Close the student profiles file
     fclose(studentFile);
 
-    // Update the student profiles in memory
-    // Re-read the student profiles file in case the list was updated
-    readStudentProfiles(students, &numStudents);
+    // After enrolling students, rewrite the student profiles file with the updated data
+    rewriteStudentProfiles(students, numStudents);
 
     // Display the updated student profiles
     viewStudentProfiles(students, numStudents);
@@ -756,6 +1043,8 @@ void enrollStudents() {
 
     printf("Students enrolled successfully.\n");
 }
+
+
 
 
 
@@ -854,7 +1143,6 @@ void assignLecturer() {
         printf("Error: Course code not found.\n");
     }
 }
-
 
 
 
@@ -1357,50 +1645,84 @@ void GradingSystem() {
 // }
 
 // Function to display menus
-void studentMenu() {
+
+//student menu
+void studentMenu(int userID) {
+    struct Student students[MAX_STUDENTS];
+    int numStudents = 0;
+
+    readPersonalDetails(students, &numStudents);
+    readCourseDetails(students, numStudents);
+    readGrades(students, numStudents);
+    readAttendance(students, numStudents);
+
     int choice;
     int result; // to store the result of scanf
     do {
-        printf("\n********** Student Menu **********\n");
-        printf("1. View Courses\n");
-        printf("2. Enroll in Course\n");
-        printf("3. Drop Course\n");
-        printf("4. View Grades\n");
-        printf("5. Logout\n");
-        printf("**************************\n");
-        printf("Enter your choice: ");
-        result = scanf("%d", &choice);
+        printf("\n-- Student Information System --\n");
+        printf("Logged in as user: %d\n", userID);
 
-        // Check if the input was a number and there are no extra characters
-        if (result == 1 && getchar() == '\n') {
+        int studentIndex = -1;
+        for (int i = 0; i < numStudents; ++i) {
+            if (students[i].userID == userID) {
+                studentIndex = i;
+                break;
+            }
+        }
+
+        if (studentIndex == -1) {
+            printf("Student not found. Please try again.\n");
+            return;
+        }
+
+        do {
+            printf("\n-- Options for %s --\n", students[studentIndex].name);
+            printf("1. View Personal Details\n");
+            printf("2. Modify Personal Details\n");
+            printf("3. View Enrolled Courses, Grades, and CGPA\n");
+            printf("4. View Attendance\n");
+            printf("5. Logout\n");
+            printf("Enter your choice: ");
+            result = scanf(" %d", &choice);
+
+            // Check if the input was a number and there are no extra characters
+            if (result != 1 || getchar() != '\n') {
+                printf("Invalid input. Please enter a number.\n");
+                clearInputBuffer();
+                continue;
+            }
+
+            // Check if the choice is within the expected range
+            if (choice < 1 || choice > 5) {
+                printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                continue;
+            }
+
+            // Process the choice
             switch(choice) {
                 case 1:
-//                    viewCourses();
+                    viewPersonalDetails(students[studentIndex]);
                     break;
                 case 2:
-//                    enrollInCourse();
+                    modifyPersonalDetails(students, numStudents, userID);
                     break;
                 case 3:
-//                    dropCourse();
+                    viewCourseGradesAndCGPA(students[studentIndex]);
                     break;
                 case 4:
-//                    viewGrades();
+                    viewAttendance(students[studentIndex]);
                     break;
                 case 5:
                     printf("Logging out...\n");
-                    return;  // Return from the function when logout is selected
-                default:
-                    printf("Invalid choice. Please enter a number between 1 and 5.\n");
+                    userID = 0; // Set userID to 0 to break the loop
                     break;
             }
-        } else {
-            printf("Invalid input. Please enter a number.\n");
-            // Clear the input buffer
-            clearInputBuffer();
-        }
-    } while(1);
+        } while(choice < 1 || choice > 5);
+    } while(userID != 0);
 }
 
+
+//programme admin menu
 void programmeAdminMenu() {
     int choice;
     Student students[MAX_STUDENTS];
@@ -1449,6 +1771,8 @@ void programmeAdminMenu() {
     } while(1);
 }
 
+
+//lecturer menu
 void lecturerMenu() {
     int choice;
     int result; // to store the result of scanf
@@ -1473,7 +1797,7 @@ void lecturerMenu() {
                     modifyGrades();
                     break;
                 case 3:
-                    viewAttendance();
+                    ltviewAttendance();
                     break;
                 case 4:
                     updateAttendance();
@@ -1493,6 +1817,8 @@ void lecturerMenu() {
     } while(1);
 }
 
+
+//system admin menu
 void systemAdminMenu() {
     int choice;
     int result; // to store the result of scanf
@@ -1579,7 +1905,7 @@ int loginSystem() {
 
     // Redirect to appropriate menu based on user role
     if (strcmp(user.role, "STD") == 0) {
-        studentMenu();
+        studentMenu(userID);
     } else if (strcmp(user.role, "PAD") == 0) {
         programmeAdminMenu();
     } else if (strcmp(user.role, "LCT") == 0) {

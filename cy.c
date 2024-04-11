@@ -14,14 +14,14 @@ typedef struct {
     char name[50];
     char coursesEnrolled[MAX_COURSES][MAX_COURSE_CODE_LENGTH]; // Array to store course codes
     int numCoursesEnrolled; // Number of courses enrolled by the student
-} Student;
+}student;
 
 typedef struct {
     char courseCode[MAX_CODE];
     char courseName[MAX_NAME];
     int numStudentsEnrolled;
     char lecturerName[MAX_NAME];
-} Course;
+}course;
 
 // Function prototypes
 void readStudentProfiles(Student students[], int *numStudents);
