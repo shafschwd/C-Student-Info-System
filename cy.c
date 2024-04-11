@@ -50,9 +50,10 @@ int main() {
         
         // Check if the input is an integer
         if (scanf("%d", &choice) != 1) {
+            // Clear the invalid input from the input buffer
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             printf("Invalid input. Please enter a number.\n");
-            // Clear input buffer
-            while (getchar() != '\n');
             continue;
         }
 
@@ -327,8 +328,6 @@ void enrollStudents() {
     while (fscanf(file, "%9[^,],%49[^,],%d,%49[^\n]%*c", course.courseCode, course.courseName, &course.numStudentsEnrolled, course.lecturerName) == 4) {
         printf("%-8s%-40s%-15d%-s\n", course.courseCode, course.courseName, course.numStudentsEnrolled, course.lecturerName);
     }
-        
-    // Close the file
     fclose(file);
 
     // Prompt user to enter the course code to enroll students
@@ -337,8 +336,10 @@ void enrollStudents() {
         printf("\nEnter the course code to enroll students (or 'b' to go back): ");
         scanf("%s", courseCode);
 
-        if (strcmp(courseCode, "b") == 0 || strcmp(courseCode, "B") == 0)
+        if (strcmp(courseCode, "b") == 0 || strcmp(courseCode, "B") == 0) {
+            printf("Returning to main menu.\n");
             return;
+        }
 
         // Check if the entered course code exists
         int courseFound = 0;
@@ -362,6 +363,11 @@ void enrollStudents() {
             printf("Course code not found. Please try again.\n");
     }
 
+    // Read existing student profiles to check for duplicate IDs
+    int numStudents = 0;
+    Student students[MAX_STUDENTS];
+    readStudentProfiles(students, &numStudents);
+
     // Open the student_profiles.txt file to enroll students
     FILE *studentFile = fopen("student_profiles.txt", "a"); // Open in append mode
     if (studentFile == NULL) {
@@ -371,27 +377,59 @@ void enrollStudents() {
 
     // Continuously enroll students until the user decides to stop
     while (1) {
-        int userID;
-        char name[MAX_NAME];
+        char input[10];
         printf("Enter student ID (or 'b' to stop): ");
-        if (scanf("%d", &userID) != 1)
-            break;
+        scanf("%9s", input);
 
-        if (userID == 'b' || userID == 'B')
+        // Check if the user wants to stop
+        if (strcmp(input, "b") == 0 || strcmp(input, "B") == 0) {
             break;
+        }
 
+        // Convert the input to an integer
+        int userID = atoi(input);
+
+        // Validate the user ID
+        if (userID < 100 || userID > 999) {
+            printf("User ID must be between 100 and 999. Please try again.\n");
+            continue;
+        }
+
+        // Check if the user ID is already in use
+        int idInUse = 0;
+        for (int i = 0; i < numStudents; i++) {
+            if (students[i].userID == userID) {
+                idInUse = 1;
+                break;
+            }
+        }
+
+        if (idInUse) {
+            printf("User ID %d is already in use. Please enter a different user ID.\n", userID);
+            continue;
+        }
+
+        // Prompt for student name
+        char studentName[MAX_NAME];
         printf("Enter student name: ");
-        scanf("%s", name);
+        scanf("%49s", studentName);
 
-        // Write student details and enrolled course to the file
-        fprintf(studentFile, "%d,%s,%s\n", userID, name, courseCode);
+        // Write the student information into the student_profiles.txt file
+        fprintf(studentFile, "%d,%s,%s\n", userID, studentName, courseCode);
+        
+        // Add the newly enrolled student to the students array
+        students[numStudents].userID = userID;
+        strcpy(students[numStudents].name, studentName);
+        strcpy(students[numStudents].coursesEnrolled[students[numStudents].numCoursesEnrolled], courseCode);
+
+        numStudents++;
     }
 
+    // Close the student profiles file
     fclose(studentFile);
 
     // Update the student profiles in memory
-    int numStudents = 0;
-    Student students[MAX_STUDENTS];
+    // Re-read the student profiles file in case the list was updated
     readStudentProfiles(students, &numStudents);
 
     // Display the updated student profiles
@@ -403,15 +441,15 @@ void enrollStudents() {
         printf("Error opening course information file.\n");
         return;
     }
-    
+
     int found = 0;
     char fileCourseCode[MAX_CODE];
     char fileCourseName[MAX_NAME];
     int fileNumStudentsEnrolled;
-    
+
     // Rewind to the beginning of the file
     rewind(courseFile);
-    
+
     // Read each line from the file and parse course data
     while (fscanf(courseFile, "%9[^,],%49[^,],%d%*c", fileCourseCode, fileCourseName, &fileNumStudentsEnrolled) == 3) {
         // Compare the course code read from the file with the user input
@@ -429,7 +467,6 @@ void enrollStudents() {
 
     printf("Students enrolled successfully.\n");
 }
-
 
 
 
