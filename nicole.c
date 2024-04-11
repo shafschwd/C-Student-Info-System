@@ -5,7 +5,7 @@
 struct Student {
     int userID;
     char name[50];
-    char courseId[7];
+    char gender[7];
     char email[50];
     char dob[20];
     char phone[15];
@@ -23,8 +23,7 @@ void calculateCGPA(struct Student *student);
 void readAttendance(struct Student *student);
 void viewPersonalDetails(struct Student student);
 void modifyPersonalDetails(struct Student *students, int numStudents);
-void viewCourseDetails(struct Student student);
-void viewGrades(struct Student student);
+void viewCourseGradesAndCGPA(struct Student student);
 void viewAttendance(struct Student student);
 void writePersonalDetails(struct Student *students, int numStudents);
 
@@ -59,17 +58,15 @@ int main() {
 
         if (studentIndex == -1) {
             printf("Student not found. Please try again.\n");
-            continue;
         }
 
         do {
             printf("\n-- Options for %s --\n", students[studentIndex].name);
             printf("1. View Personal Details\n");
             printf("2. Modify Personal Details\n");
-            printf("3. View Enrolled Courses\n");
-            printf("4. View Grades\n");
-            printf("5. View Attendance\n");
-            printf("6. Exit\n");
+            printf("3. View Enrolled Courses, Grades, and CGPA\n");
+            printf("4. View Attendance\n");
+            printf("5. Exit\n");
             printf("Enter your choice: ");
             scanf(" %d", &choice);
 
@@ -81,21 +78,18 @@ int main() {
                     modifyPersonalDetails(students, numStudents);
                     break;
                 case 3:
-                    viewCourseDetails(students[studentIndex]);
+                    viewCourseGradesAndCGPA(students[studentIndex]);
                     break;
                 case 4:
-                    viewGrades(students[studentIndex]);
-                    break;
-                case 5:
                     viewAttendance(students[studentIndex]);
                     break;
-                case 6:
+                case 5:
                     printf("Exiting...\n");
                     break;
                 default:
                     printf("Invalid choice. Please try again.\n");
             }
-        } while(choice != 6);
+        } while(choice != 5);
     } while(studentID != 0);
 
     return 0;
@@ -107,7 +101,7 @@ void readPersonalDetails(struct Student *students, int *numStudents) {
     if (file) {
         int i = 0;
         while (fscanf(file, "%d,%49[^,],%6[^,],%49[^,],%19[^,],%14[^,],",
-                      &students[i].userID, students[i].name, students[i].courseId,
+                      &students[i].userID, students[i].name, students[i].gender,
                       students[i].email, students[i].dob, students[i].phone) == 6) {
             i++;
         }
@@ -118,52 +112,17 @@ void readPersonalDetails(struct Student *students, int *numStudents) {
     }
 }
 
-// Function to read enrolled courses from file
-void readCourseDetails(struct Student *student) {
-    FILE *file = fopen("course.txt", "r");
+// Function to write personal details back to file after modification
+void writePersonalDetails(struct Student *students, int numStudents) {
+    FILE *file = fopen("personal_detail.txt", "w");
     if (file) {
-        for (int i = 0; i < 5; i++) {
-            fscanf(file, "%49[^,\n]", student->enrolledCourses[i]);
+        for (int i = 0; i < numStudents; i++) {
+            fprintf(file, "%d,%s,%s,%s,%s,%s\n", students[i].userID, students[i].name,
+                    students[i].gender, students[i].email, students[i].dob, students[i].phone);
         }
         fclose(file);
     } else {
-        printf("Error reading course.txt file.\n");
-    }
-}
-
-// Function to read grades from file
-void readGrades(struct Student *student) {
-    FILE *file = fopen("grade.txt", "r");
-    if (file) {
-        for (int i = 0; i < 5; i++) {
-            fscanf(file, "%d", &student->grades[i]);
-        }
-        fclose(file);
-    } else {
-        printf("Error reading grade.txt file.\n");
-    }
-}
-
-// Function to calculate CGPA
-void calculateCGPA(struct Student *student) {
-    float totalCredits = 0, totalGradePoints = 0;
-    for(int i = 0; i < 5; i++) {
-        totalCredits += 3;
-        totalGradePoints += student->grades[i];
-    }
-    student->CGPA = totalGradePoints / totalCredits;
-}
-
-// Function to read attendance from file
-void readAttendance(struct Student *student) {
-    FILE *file = fopen("attendance.txt", "r");
-    if (file) {
-        for (int i = 0; i < 5; i++) {
-            fscanf(file, "%d", &student->attendance[i]);
-        }
-        fclose(file);
-    } else {
-        printf("Error reading attendance.txt file.\n");
+        printf("Error writing personal_detail.txt file.\n");
     }
 }
 
@@ -172,7 +131,7 @@ void viewPersonalDetails(struct Student student) {
     printf("\n-- Personal Details --\n");
     printf("Name: %s\n", student.name);
     printf("Student ID: %d\n", student.userID);
-    printf("Course ID: %s\n", student.courseId);
+    printf("Gender: %s\n", student.gender);
     printf("Email: %s\n", student.email);
     printf("Date of Birth: %s\n", student.dob);
     printf("Phone: %s\n", student.phone);
@@ -208,34 +167,20 @@ void modifyPersonalDetails(struct Student *students, int numStudents) {
     writePersonalDetails(students, numStudents);
 }
 
-// Function to write personal details back to file after modification
-void writePersonalDetails(struct Student *students, int numStudents) {
-    FILE *file = fopen("personal_detail.txt", "w");
-    if (file) {
-        for (int i = 0; i < numStudents; i++) {
-            fprintf(file, "%d,%s,%s,%s,%s,%s\n", students[i].userID, students[i].name,
-                    students[i].courseId, students[i].email, students[i].dob, students[i].phone);
-        }
-        fclose(file);
-    } else {
-        printf("Error writing personal_detail.txt file.\n");
-    }
-}
-
-// Function to view enrolled courses of a student
-void viewCourseDetails(struct Student student) {
+// Function to view enrolled courses, grades, and CGPA of a student
+void viewCourseGradesAndCGPA(struct Student student) {
     printf("\n-- Enrolled Courses --\n");
     for(int i = 0; i < 5; i++) {
         printf("Course %d: %s\n", i + 1, student.enrolledCourses[i]);
     }
-}
 
-// Function to view grades of a student
-void viewGrades(struct Student student) {
     printf("\n-- Grades --\n");
     for(int i = 0; i < 5; i++) {
         printf("Course %d: %d\n", i + 1, student.grades[i]);
     }
+
+    printf("\n-- CGPA --\n");
+    printf("CGPA: %.2f\n", student.CGPA);
 }
 
 // Function to view attendance of a student
