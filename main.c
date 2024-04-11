@@ -8,335 +8,368 @@
 
 
 
-//yuhuang part
-//#define MAX_CODE 10
-//#define MAX_NAME 51
-//#define MAX_LINE 256
-//#define MAX_COURSE_ID 20
-//#define MAX_COURSES 5
-//#define MAX_COURSE_NAME 30
-//#define MAX_ID 20
-//#define MAX_GRADE 5
-//#define MAX_ATTENDANCE 20
-//
-//// Structure definition
-//typedef struct {
-//    char courseCode[MAX_CODE];
-//    char courseName[MAX_NAME];
-//    int numStudentsEnrolled;
-//    char lecturerName[MAX_NAME];
-//} Course;
-//
-//typedef struct {
-//    char studentID[MAX_ID];
-//    char name[MAX_NAME];
-//    int numCoursesEnrolled;
-//    char coursesEnrolled[MAX_COURSES][MAX_COURSE_NAME];
-//} Student;
-//
-//void viewGrades() {
-//    FILE* file = fopen("grades.txt", "r");
-//    if (!file) {
-//        perror("Unable to open the file");
-//        return;
-//    }
-//
-//    char targetStudentID[MAX_ID];
-//    int validID = 0;  // Flag to ensure valid input is provided.
-//
-//    do {
-//        printf("Enter the student ID to view grades (or type 'exit' to return): ");
-//        scanf("%10s", targetStudentID);
-//        if (strcmp(targetStudentID, "exit") == 0) {
-//            fclose(file);
-//            return;
-//        }
-//
-//        // Clear the input buffer.
-//        while (getchar() != '\n');
-//
-//        char line[MAX_LINE];
-//        int found = 0;  // To track if at least one grade record is found.
-//
-//        fseek(file, 0, SEEK_SET);  // Go back to the start of the file for each ID input.
-//
-//        while (fgets(line, sizeof(line), file)) {
-//            // Remove possible newline character at the end of the line.
-//            line[strcspn(line, "\n")] = 0;
-//
-//            char studentID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE];
-//            // Adjusted the sscanf() to match the "StudentID,CourseCode,Grade" format.
-//            if (sscanf(line, "%[^,],%[^,],%s", studentID, courseCode, grade) == 3) {
-//                if (strcmp(studentID, targetStudentID) == 0) {
-//                    if (!found) {
-//                        printf("Grades for Student ID %s:\n", targetStudentID);
-//                        printf("ID\tCourse Code\tGrade\n");
-//                        printf("--------------------------------\n");
-//                    }
-//                    printf("%s\t%s\t\t%s\n", studentID, courseCode, grade);
-//                    found = 1;  // Mark that we've found at least one record.
-//                    validID = 1;  // Mark valid ID input to exit the loop.
-//                }
-//            }
-//        }
-//
-//        if (!found) {
-//            printf("Invalid student ID or no grades found, please try again.\n");
-//        }
-//    } while (!validID);
-//
-//    fclose(file);
-//}
-//
-//
-//const char* validGrades[] = {"A+", "A", "B+", "B", "C+", "C", "C-", "D", "F"};
-//const int numValidGrades = sizeof(validGrades) / sizeof(validGrades[0]);
-//
-//int isValidGrade(const char* grade) {
-//    for (int i = 0; i < numValidGrades; ++i) {
-//        if (strcmp(grade, validGrades[i]) == 0) {
-//            return 1;
-//        }
-//    }
-//    return 0;
-//}
-//
-//
-//int isValidStudentID(const char* studentID) {
-//    FILE* file = fopen("grades.txt", "r");
-//    char line[MAX_LINE], id[MAX_ID];
-//    if (!file) {
-//        perror("Unable to open the file");
-//        return 0;
-//    }
-//    while (fgets(line, sizeof(line), file)) {
-//        sscanf(line, "%[^,]", id);
-//        if (strcmp(id, studentID) == 0) {
-//            fclose(file);
-//            return 1;
-//        }
-//    }
-//    fclose(file);
-//    return 0;
-//}
-//
-//int isValidCourseCode(const char* courseCode) {
-//    FILE* file = fopen("grades.txt", "r");
-//    if (!file) {
-//        perror("Unable to open the file");
-//        return 0;
-//    }
-//
-//    char line[MAX_LINE];
-//    int isValid = 0;
-//
-//    while (fgets(line, sizeof(line), file) != NULL) {
-//        char readCourseCode[MAX_COURSE_ID];
-//        sscanf(line, "%*[^,],%[^,]", readCourseCode);
-//        if (strcmp(readCourseCode, courseCode) == 0) {
-//            isValid = 1;
-//            break;
-//        }
-//    }
-//
-//    fclose(file);
-//    return isValid;
-//}
-//
-//
-//void modifyGrades() {
-//    char targetStudentID[MAX_ID];
-//    char targetCourseCode[MAX_COURSE_ID];
-//    char newGrade[MAX_GRADE];
-//
-//    int validStudentID = 0;
-//    int validCourseCode = 0;
-//
-//    while (!validStudentID) {
-//        printf("Enter Student ID to modify grade: ");
-//        scanf("%10s", targetStudentID);
-//        getchar();
-//
-//        if (isValidStudentID(targetStudentID)) {
-//            validStudentID = 1;
-//        } else {
-//            printf("Invalid student ID, please try again.\n");
-//        }
-//    }
-//
-//    while (!validCourseCode) {
-//        printf("Enter Course Code: ");
-//        scanf("%10s", targetCourseCode);
-//        getchar();
-//
-//        if (isValidCourseCode(targetCourseCode)) {
-//            validCourseCode = 1;
-//        } else {
-//            printf("Invalid course code, please try again.\n");
-//        }
-//    }
-//
-//    while (1) {
-//        printf("Enter new Grade (A+, A, B+, B, C+, C, C-, D, F): ");
-//        scanf("%4s", newGrade);
-//        getchar();
-//
-//        if (isValidGrade(newGrade)) {
-//            break;
-//        } else {
-//            printf("Invalid Grade, please try again.\n");
-//        }
-//    }
-//
-//    FILE* file = fopen("grades.txt", "r");
-//    FILE* tempFile = fopen("temp_grades.txt", "w");
-//    char line[MAX_LINE];
-//    int found = 0;
-//
-//    while (fgets(line, sizeof(line), file)) {
-//        char studentID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE];
-//        sscanf(line, "%[^,],%[^,],%s", studentID, courseCode, grade);
-//
-//        if (strcmp(studentID, targetStudentID) == 0 && strcmp(courseCode, targetCourseCode) == 0) {
-//            fprintf(tempFile, "%s,%s,%s\n", studentID, courseCode, newGrade);
-//            found = 1;
-//        } else {
-//            fprintf(tempFile, "%s", line);
-//        }
-//    }
-//
-//    fclose(file);
-//    fclose(tempFile);
-//
-//    if (found) {
-//        remove("grades.txt");
-//        rename("temp_grades.txt", "grades.txt");
-//        printf("Updated Successfully.\n");
-//    } else {
-//        remove("temp_grades.txt");
-//        printf("No matching record found to update.\n");
-//    }
-//}
-//
-//
-//void viewAttendance() {
-//    FILE* file = fopen("attendance.txt", "r");
-//    if (!file) {
-//        perror("Unable to open the file");
-//        return;
-//    }
-//
-//    char targetStudentID[MAX_ID];
-//    int validID = 0;  // Flag to ensure valid input is provided.
-//
-//    do {
-//        printf("Enter the student ID to view attendance (or type 'exit' to return): ");
-//        scanf("%10s", targetStudentID);
-//        if (strcmp(targetStudentID, "exit") == 0) {
-//            fclose(file);
-//            return;
-//        }
-//
-//        // Clear the input buffer.
-//        while (getchar() != '\n');
-//
-//        char line[MAX_LINE];
-//        int found = 0;  // To track if at least one attendance record is found.
-//
-//        fseek(file, 0, SEEK_SET);  // Go back to the start of the file for each ID input.
-//
-//        while (fgets(line, sizeof(line), file)) {
-//            // Remove possible newline character at the end of the line.
-//            line[strcspn(line, "\n")] = 0;
-//
-//            char studentID[MAX_ID], courseCode[MAX_COURSE_ID], attendance[MAX_ATTENDANCE];
-//            if (sscanf(line, "%[^,],%[^,],%s", studentID, courseCode, attendance) == 3) {
-//                if (strcmp(studentID, targetStudentID) == 0) {
-//                    if (!found) {
-//                        printf("Attendance for Student ID %s:\n", targetStudentID);
-//                        printf("ID\tCourse Code\tAttendance\n");
-//                        printf("-----------------------------------\n");
-//                    }
-//                    printf("%s\t%s\t\t%s\n", studentID, courseCode, attendance);
-//                    found = 1;  // Mark that we've found at least one record.
-//                    validID = 1;  // Mark valid ID input to exit the loop.
-//                }
-//            }
-//        }
-//
-//        if (!found) {
-//            printf("Invalid student ID or no attendance records found, please try again.\n");
-//        }
-//    } while (!validID);
-//
-//    fclose(file);
-//}
-//
-//int isValidStudentID(const char* studentID);
-//int isValidCourseCode(const char* courseCode);
-//
-//void updateAttendance() {
-//    char targetStudentID[MAX_ID], targetCourseID[MAX_COURSE_ID];
-//    int newAttendance;
-//    char buffer[MAX_LINE];
-//
-//    printf("Enter Student ID to update attendance or 'exit' to quit: ");
-//    scanf("%10s", targetStudentID);
-//    if (strcmp(targetStudentID, "exit") == 0) return;
-//    while (!isValidStudentID(targetStudentID)) {
-//        printf("Invalid student ID, please try again or enter 'exit' to quit: ");
-//        scanf("%10s", targetStudentID);
-//        if (strcmp(targetStudentID, "exit") == 0) return;
-//    }
-//
-//    printf("Enter Course ID or 'exit' to quit: ");
-//    scanf("%10s", targetCourseID);
-//    if (strcmp(targetCourseID, "exit") == 0) return;
-//    while (!isValidCourseCode(targetCourseID)) {
-//        printf("Invalid course code, please try again or enter 'exit' to quit: ");
-//        scanf("%10s", targetCourseID);
-//        if (strcmp(targetCourseID, "exit") == 0) return;
-//    }
-//
-//    printf("Enter new Attendance Status (0-100): ");
-//    while (scanf("%d", &newAttendance) != 1 || newAttendance < 0 || newAttendance > 100) {
-//        printf("Invalid number, please try again: ");
-//        while (getchar() != '\n');
-//    }
-//
-//    FILE* file = fopen("attendance.txt", "r");
-//    FILE* tempFile = fopen("temp_attendance.txt", "w");
-//    if (!file || !tempFile) {
-//        perror("Error opening file");
-//        return;
-//    }
-//
-//    char line[MAX_LINE];
-//    int found = 0;
-//    while (fgets(line, sizeof(line), file)) {
-//        char readStudentID[MAX_ID], readCourseID[MAX_COURSE_ID];
-//        int dummyAttendance;
-//        if (sscanf(line, "%[^,],%[^,],%d%%", readStudentID, readCourseID, &dummyAttendance) == 3 &&
-//            strcmp(readStudentID, targetStudentID) == 0 && strcmp(readCourseID, targetCourseID) == 0) {
-//            fprintf(tempFile, "%s,%s,%d%%\n", readStudentID, readCourseID, newAttendance);
-//            found = 1;
-//        } else {
-//            fputs(line, tempFile);
-//        }
-//    }
-//
-//    fclose(file);
-//    fclose(tempFile);
-//
-//    if (found) {
-//        remove("attendance.txt");
-//        rename("temp_attendance.txt", "attendance.txt");
-//        printf("Attendance updated successfully.\n");
-//    } else {
-//        remove("temp_attendance.txt");
-//        printf("No matching record found to update.\n");
-//    }
-//}
+// yuhuang part
+#define MAX_CODE 11
+#define MAX_NAME 52
+#define MAX_LINE 257
+#define MAX_COURSE_ID 21
+#define MAX_COURSES 5
+#define MAX_COURSE_NAME 31
+#define MAX_ID 21
+#define MAX_GRADE 6
+#define MAX_ATTENDANCE 21
+#define MAX_CGPA 5
+
+
+
+typedef struct {
+    char courseCode[MAX_CODE];
+    char courseName[MAX_NAME];
+    int numStudentsEnrolled;
+    char lecturerName[MAX_NAME];
+} Course;
+
+typedef struct {
+    int userID;
+    char name[MAX_NAME];
+    int numCoursesEnrolled;
+    char coursesEnrolled[MAX_COURSES][MAX_COURSE_NAME];
+} Student;
+
+int isValidUserID(const char* userID) {
+    int id = atoi(userID);
+    return id >= 100 && id <= 999;
+}
+
+float getCGPA(const char* grade) {
+    // Placeholder for CGPA conversion logic.
+    return 4.0; // Example: assume all grades convert to 4.0.
+}
+
+// Validate the student ID is between 100 and 999.
+int isvalidUserID(const char* userID) {
+    int id = atoi(userID); // Convert string to integer.
+    return (id >= 100 && id <= 999);
+}
+
+void viewGrades() {
+    char targetUserID[MAX_ID];
+    char line[MAX_LINE];
+    int validInput = 0;
+
+    while (!validInput) {
+        printf("Enter the user ID to view grades (or type 'exit' to return): ");
+        scanf("%s", targetUserID);
+
+        if (strcmp(targetUserID, "exit") == 0) return; // Exit if user types "exit".
+
+        // Validate user ID.
+        if (!isValidUserID(targetUserID)) {
+            printf("Invalid user ID. Please try again.\n");
+            continue; // Skip the rest of the loop and prompt again.
+        }
+
+        validInput = 1; // ID is valid, proceed.
+    }
+
+    FILE* file = fopen("grades.txt", "r");
+    if (!file) {
+        perror("Failed to open grades.txt");
+        return;
+    }
+
+    int found = 0;
+    printf("ID\tCourse Code\tGrade\tCGPA\n");
+    printf("----------------------------------------\n");
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        char userID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE], cgpaStr[MAX_CGPA];
+
+        // Updated to match the new file format.
+        if (sscanf(line, "%[^,],%[^,],%[^,],%s", userID, courseCode, grade, cgpaStr) == 4 && strcmp(userID, targetUserID) == 0) {
+            printf("%s\t%s\t\t%s\t%s\n", userID, courseCode, grade, cgpaStr);
+            found = 1;
+        }
+    }
+
+    fclose(file);
+
+    if (!found) {
+        printf("No grades found for user ID %s.\n", targetUserID);
+    }
+}
+
+
+const char* validGrades[] = {"A+", "A", "B+", "B", "C+", "C", "C-", "D", "F"};
+const int numValidGrades = sizeof(validGrades) / sizeof(validGrades[0]);
+
+int isValidGrade(const char* grade) {
+    for (int i = 0; i < numValidGrades; ++i) {
+        if (strcmp(grade, validGrades[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+int isValiduserID(const char* userID) {
+    FILE* file = fopen("grades.txt", "r");
+    char line[MAX_LINE], id[MAX_ID];
+    if (!file) {
+        perror("Unable to open the file");
+        return 0;
+    }
+    while (fgets(line, sizeof(line), file)) {
+        sscanf(line, "%[^,]", id);
+        if (strcmp(id, userID) == 0) {
+            fclose(file);
+            return 1;
+        }
+    }
+    fclose(file);
+    return 0;
+}
+
+float gradeToCGPA(const char* grade) {
+    if (strcmp(grade, "A+") == 0) return 4.00;
+    if (strcmp(grade, "A") == 0) return 3.70;
+    if (strcmp(grade, "B+") == 0) return 3.30;
+    if (strcmp(grade, "B") == 0) return 3.00;
+    if (strcmp(grade, "C+") == 0) return 2.70;
+    if (strcmp(grade, "C") == 0) return 2.30;
+    if (strcmp(grade, "C-") == 0) return 2.00;
+    if (strcmp(grade, "D") == 0) return 1.60;
+    if (strcmp(grade, "F") == 0) return 0.00;
+    return -1;
+}
+
+int isvalidGrade(const char* grade) {
+    return gradeToCGPA(grade) != -1;
+}
+
+int isvaliduserID(const char* userID) {
+    int id = atoi(userID);
+    return id >= 100 && id <= 999;
+}
+
+int isValidCourseCode(const char* courseCode) {
+    FILE* file = fopen("grades.txt", "r");
+    if (!file) {
+        perror("Unable to open the file");
+        return 0;
+    }
+
+    char line[MAX_LINE];
+    while (fgets(line, sizeof(line), file)) {
+        char readCourseCode[MAX_COURSE_ID];
+        sscanf(line, "%*[^,],%[^,]", readCourseCode);
+        if (strcmp(readCourseCode, courseCode) == 0) {
+            fclose(file);
+            return 1;
+        }
+    }
+    fclose(file);
+    return 0;
+}
+
+void modifyGrades() {
+    char targetUserID[MAX_ID];
+    char targetCourseCode[MAX_COURSE_ID];
+    char newGrade[MAX_GRADE];
+    float cgpa;
+
+    do {
+        printf("Enter User ID to modify grade or 'exit' to cancel: ");
+        scanf("%s", targetUserID);
+        if (strcmp(targetUserID, "exit") == 0) {
+            return;
+        }
+        if (!isValidUserID(targetUserID)) {
+            printf("Invalid user ID, must be between 100 and 999. Please try again.\n");
+        } else {
+            break;
+        }
+    } while (1);
+
+    do {
+        printf("Enter Course Code or 'exit' to cancel: ");
+        scanf("%s", targetCourseCode);
+        if (strcmp(targetCourseCode, "exit") == 0) {
+            return;
+        }
+        if (!isValidCourseCode(targetCourseCode)) {
+            printf("Invalid course code, please try again.\n");
+        } else {
+            break;
+        }
+    } while (1);
+
+    do {
+        printf("Enter new Grade (A+, A, B+, B, C+, C, C-, D, F) or 'exit' to cancel: ");
+        scanf("%s", newGrade);
+        if (strcmp(newGrade, "exit") == 0) {
+            return;
+        }
+        if (!isValidGrade(newGrade)) {
+            printf("Invalid Grade, please try again.\n");
+        } else {
+            cgpa = gradeToCGPA(newGrade);
+            break;
+        }
+    } while (1);
+
+    FILE* file = fopen("grades.txt", "r");
+    FILE* tempFile = fopen("temp_grades.txt", "w");
+    if (!file || !tempFile) {
+        perror("Error opening files");
+        return;
+    }
+
+    char line[MAX_LINE];
+    int found = 0;
+    while (fgets(line, sizeof(line), file)) {
+        char userID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE];
+        float fileCgpa;
+        if (sscanf(line, "%[^,],%[^,],%[^,],%f", userID, courseCode, grade, &fileCgpa) == 4) {
+            if (strcmp(userID, targetUserID) == 0 && strcmp(courseCode, targetCourseCode) == 0) {
+                fprintf(tempFile, "%s,%s,%s,%.2f\n", userID, courseCode, newGrade, cgpa);
+                found = 1;
+            } else {
+                fputs(line, tempFile);
+            }
+        }
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (found) {
+        remove("grades.txt");
+        rename("temp_grades.txt", "grades.txt");
+        printf("Grade and CGPA updated successfully.\n");
+    } else {
+        printf("No matching record found to update.\n");
+        remove("temp_grades.txt");
+    }
+}
+
+void viewAttendance() {
+    FILE* file = fopen("attendance.txt", "r");
+    if (!file) {
+        perror("Unable to open the file");
+        return;
+    }
+
+    char targetUserID[MAX_ID];
+    int validID = 0;
+
+    do {
+        printf("Enter the user ID to view attendance (or type 'exit' to return): ");
+        scanf("%10s", targetUserID);
+        if (strcmp(targetUserID, "exit") == 0) {
+            fclose(file);
+            return;
+        }
+
+        while (getchar() != '\n');
+
+        char line[MAX_LINE];
+        int found = 0;
+
+        fseek(file, 0, SEEK_SET);
+
+        while (fgets(line, sizeof(line), file)) {
+            line[strcspn(line, "\n")] = 0;
+
+            char userID[MAX_ID], courseCode[MAX_COURSE_ID], attendance[MAX_ATTENDANCE];
+            if (sscanf(line, "%[^,],%[^,],%s", userID, courseCode, attendance) == 3) {
+                if (strcmp(userID, targetUserID) == 0) {
+                    if (!found) {
+                        printf("Attendance for User ID %s:\n", targetUserID);
+                        printf("ID\tCourse Code\tAttendance\n");
+                        printf("-----------------------------------\n");
+                    }
+                    printf("%s\t%s\t\t%s\n", userID, courseCode, attendance);
+                    found = 1;
+                    validID = 1;
+                }
+            }
+        }
+
+        if (!found) {
+            printf("Invalid user ID or no attendance records found, please try again.\n");
+        }
+    } while (!validID);
+
+    fclose(file);
+}
+
+int isValidUserID(const char* userID);
+int isValidCourseCode(const char* courseCode);
+
+void updateAttendance() {
+    char targetUserID[MAX_ID], targetCourseID[MAX_COURSE_ID];
+    int newAttendance;
+    char buffer[MAX_LINE];
+
+    printf("Enter User ID to update attendance or 'exit' to quit: ");
+    scanf("%10s", targetUserID);
+    if (strcmp(targetUserID, "exit") == 0) return;
+    while (!isValidUserID(targetUserID)) {
+        printf("Invalid user ID, please try again or enter 'exit' to quit: ");
+        scanf("%10s", targetUserID);
+        if (strcmp(targetUserID, "exit") == 0) return;
+    }
+
+    printf("Enter Course ID or 'exit' to quit: ");
+    scanf("%10s", targetCourseID);
+    if (strcmp(targetCourseID, "exit") == 0) return;
+    while (!isValidCourseCode(targetCourseID)) {
+        printf("Invalid course code, please try again or enter 'exit' to quit: ");
+        scanf("%10s", targetCourseID);
+        if (strcmp(targetCourseID, "exit") == 0) return;
+    }
+
+    printf("Enter new Attendance Status (0-100): ");
+    while (scanf("%d", &newAttendance) != 1 || newAttendance < 0 || newAttendance > 100) {
+        printf("Invalid number, please try again: ");
+        while (getchar() != '\n');
+    }
+
+    FILE* file = fopen("attendance.txt", "r");
+    FILE* tempFile = fopen("temp_attendance.txt", "w");
+    if (!file || !tempFile) {
+        perror("Error opening file");
+        return;
+    }
+
+    char line[MAX_LINE];
+    int found = 0;
+    while (fgets(line, sizeof(line), file)) {
+        char readUserID[MAX_ID], readCourseID[MAX_COURSE_ID];
+        int dummyAttendance;
+        if (sscanf(line, "%[^,],%[^,],%d%%", readUserID, readCourseID, &dummyAttendance) == 3 &&
+            strcmp(readUserID, targetUserID) == 0 && strcmp(readCourseID, targetCourseID) == 0) {
+            fprintf(tempFile, "%s,%s,%d%%\n", readUserID, readCourseID, newAttendance);
+            found = 1;
+        } else {
+            fputs(line, tempFile);
+        }
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (found) {
+        remove("attendance.txt");
+        rename("temp_attendance.txt", "attendance.txt");
+        printf("Attendance updated successfully.\n");
+    } else {
+        remove("temp_attendance.txt");
+        printf("No matching record found to update.\n");
+    }
+}
 
 
 
@@ -356,14 +389,14 @@ typedef struct {
     char name[50];
     char coursesEnrolled[MAX_COURSES][MAX_COURSE_CODE_LENGTH]; // Array to store course codes
     int numCoursesEnrolled; // Number of courses enrolled by the student
-} Student;
+} student;
 
 typedef struct {
     char courseCode[MAX_CODE];
     char courseName[MAX_NAME];
     int numStudentsEnrolled;
     char lecturerName[MAX_NAME];
-} Course;
+} course;
 
 void readStudentProfiles(Student students[], int *numStudents) {
     FILE *file = fopen("student_profiles.txt", "r");
@@ -1281,6 +1314,48 @@ void GradingSystem() {
     fclose(file);
 }
 
+// void GradingSystem() {
+//     char is_update;
+//     printf("\nCurrent grading system: \n");
+//     show_grading_system();
+
+//     printf("You want to update grading system (y/n): ");
+//     scanf("%c", &is_update);
+
+//     if (is_update == 'y') {
+//         FILE *grading_file = fopen("grading_system.txt", "w");
+
+//         if (grading_file == NULL) {
+//             printf("Error creating grading system file.\n");
+//             return;
+//         }
+
+//         char *grades[] = {"A+", "A", "B+", "B", "C+", "C", "C-", "D", "F"};
+//         float cpa[] = {4.0, 3.7, 3.3, 3.0, 2.7, 2.3, 2.0, 1.6, 0};
+
+//         int num_ranges = sizeof(grades)/sizeof(grades[0]);
+
+//         for (int i = 0; i < num_ranges; i++) {
+//             int lower_bound, upper_bound;
+
+//             printf("Enter the upper bound for %s: ", grades[i]);
+//             scanf("%d", &upper_bound);
+
+//             printf("Enter the lower bound for %s: ", grades[i]);
+//             scanf("%d", &lower_bound);
+
+//             fprintf(grading_file, "%d - %d %s %.2lf\n", lower_bound, upper_bound, grades[i], cpa[i]);
+//         }
+
+//         fclose(grading_file);
+//         printf("Grading system defined successfully.\n");
+//     } else if (is_update == 'n') {
+//         return;
+//     } else {
+//         printf("Please enter a valid value");
+//     }
+// }
+
 // Function to display menus
 void studentMenu() {
     int choice;
@@ -1300,16 +1375,16 @@ void studentMenu() {
         if (result == 1 && getchar() == '\n') {
             switch(choice) {
                 case 1:
-                    // viewCourses();
+//                    viewCourses();
                     break;
                 case 2:
-                    // enrollInCourse();
+//                    enrollInCourse();
                     break;
                 case 3:
-                    // dropCourse();
+//                    dropCourse();
                     break;
                 case 4:
-                    // viewGrades();
+//                    viewGrades();
                     break;
                 case 5:
                     printf("Logging out...\n");
@@ -1392,16 +1467,16 @@ void lecturerMenu() {
         if (result == 1 && getchar() == '\n') {
             switch(choice) {
                 case 1:
-//                    viewGrades();
+                    viewGrades();
                     break;
                 case 2:
-//                    modifyGrades();
+                    modifyGrades();
                     break;
                 case 3:
-//                    viewAttendance();
+                    viewAttendance();
                     break;
                 case 4:
-//                    updateAttendance();
+                    updateAttendance();
                     break;
                 case 5:
                     printf("Logging out...\n");
@@ -1535,12 +1610,28 @@ void mainMenu() {
                 case 1:
                     loginSuccess = loginSystem();
                     if (loginSuccess == 1) {
-                        printf("Do you want to exit the program? (1 for yes, 0 for no): ");
-                        scanf("%d", &exitProgram);
-                        if (exitProgram == 1) {
-                            printf("Exiting...\n");
-                            return; // If user wants to exit the program, return from the function
-                        }
+                        int result; // to store the result of scanf
+                        do {
+                            printf("Do you want to exit the program? (1 for yes, 0 for no): ");
+                            result = scanf("%d", &exitProgram);
+
+                            // Check if the input was a number and there are no extra characters
+                            if (result == 1 && getchar() == '\n') {
+                                if (exitProgram == 0) {
+                                    // Continue the program
+                                    break;
+                                } else if (exitProgram == 1) {
+                                    printf("Exiting...\n");
+                                    return; // If user wants to exit the program, return from the function
+                                } else {
+                                    printf("Invalid input. Please enter 0 or 1.\n");
+                                }
+                            } else {
+                                printf("Invalid input. Please enter a number.\n");
+                                // Clear the input buffer
+                                clearInputBuffer();
+                            }
+                        } while(1);
                     }
                     break;
                 case 2:
