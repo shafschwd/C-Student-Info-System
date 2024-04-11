@@ -2,4 +2,5 @@
 222,cy,MAT202
 333,nicole,MAT202
 444,yuhuang,MAT202
-666,sam,CSE101
+555,sam,ENG001
+111,elvis,ENG001
