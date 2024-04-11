@@ -58,6 +58,7 @@ int main() {
 
         if (studentIndex == -1) {
             printf("Student not found. Please try again.\n");
+            continue;
         }
 
         do {
@@ -95,14 +96,14 @@ int main() {
     return 0;
 }
 
-// Function to read personal details of students from file
 void readPersonalDetails(struct Student *students, int *numStudents) {
     FILE *file = fopen("personal_detail.txt", "r");
     if (file) {
         int i = 0;
-        while (fscanf(file, "%d,%49[^,],%6[^,],%49[^,],%19[^,],%14[^,],",
+        while (fscanf(file, "%d,%49[^,],%6[^,],%19[^,],%49[^,],%14[^,\n]",
                       &students[i].userID, students[i].name, students[i].gender,
-                      students[i].email, students[i].dob, students[i].phone) == 6) {
+                      students[i].dob, students[i].email, students[i].phone) == 6) {
+            printf("Read student: %d %s\n", students[i].userID, students[i].name);
             i++;
         }
         *numStudents = i;
@@ -111,6 +112,9 @@ void readPersonalDetails(struct Student *students, int *numStudents) {
         printf("Error reading personal_detail.txt file.\n");
     }
 }
+
+
+
 
 // Function to write personal details back to file after modification
 void writePersonalDetails(struct Student *students, int numStudents) {
