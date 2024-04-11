@@ -25,7 +25,6 @@ typedef struct {
 
 // Function prototypes
 void readStudentProfiles(Student students[], int *numStudents);
-void writeStudentProfiles(Student students[], int numStudents);
 void viewStudentProfiles(Student students[], int numStudents);
 void updateCourseInFile(const Course *course, const char *lecturerName);
 void viewAndUpdateCourseInfo();
@@ -106,31 +105,6 @@ void readStudentProfiles(Student students[], int *numStudents) {
         }
 
         (*numStudents)++;
-    }
-
-    fclose(file);
-}
-
-
-
-
-
-
-
-void writeStudentProfiles(Student students[], int numStudents) {
-    FILE *file = fopen("student_profiles.txt", "w");
-    if (file == NULL) {
-        printf("Error opening file for writing.\n");
-        return;
-    }
-
-    for (int i = 0; i < numStudents; i++) {
-        fprintf(file, "%d,%s", students[i].userID, students[i].name);
-        // Write course enrollment data
-        for (int j = 0; j < students[i].numCoursesEnrolled; j++) {
-            fprintf(file, ",%s", students[i].coursesEnrolled[j]);
-        }
-        fprintf(file, "\n"); // Add newline character after each student entry
     }
 
     fclose(file);
