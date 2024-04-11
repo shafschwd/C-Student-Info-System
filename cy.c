@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_COURSES 100
+#define MAX_COURSES 10
 #define MAX_COURSE_CODE_LENGTH 10
 #define MAX_STUDENTS 100
 #define MAX_NAME 50
@@ -28,6 +28,7 @@ void readStudentProfiles(Student students[], int *numStudents);
 void viewStudentProfiles(Student students[], int numStudents);
 void updateCourseInFile(const Course *course, const char *lecturerName);
 void viewAndUpdateCourseInfo();
+void updateCourseInFile(const Course *course, const char *lecturerName);
 void enrollStudents();
 void assignLecturer();
 
@@ -83,28 +84,57 @@ int main() {
     return 0;
 }
 
-void readStudentProfiles(Student students[], int *numStudents) {
+void readStudentProfiles(Student *students, int *numStudents) {
     FILE *file = fopen("student_profiles.txt", "r");
     if (file == NULL) {
         printf("Error opening file for reading.\n");
         return;
     }
 
-    *numStudents = 0; // Initialize the number of students
+    char line[256];  // Buffer for each line from the file
+    while (fgets(line, sizeof(line), file)) {
+        char *token = strtok(line, ",");
+        if (token == NULL) continue;  // Skip invalid lines
 
-    // Read each line from the file and parse student data
-    while (*numStudents < MAX_STUDENTS &&
-           fscanf(file, "%d,%49[^,\n],", &students[*numStudents].userID, students[*numStudents].name) == 2) {
-    
-        // Read course enrollment data
-        students[*numStudents].numCoursesEnrolled = 0;
-        char courseCode[MAX_COURSE_CODE_LENGTH];
-        while (fscanf(file, "%9[^,\n]", courseCode) == 1) {
-            strcpy(students[*numStudents].coursesEnrolled[students[*numStudents].numCoursesEnrolled], courseCode);
-            (students[*numStudents].numCoursesEnrolled)++;
+        // Read student ID
+        int userID = atoi(token);
+
+        // Read student name
+        token = strtok(NULL, ",");
+        if (token == NULL) continue;  // Skip invalid lines
+        char *name = token;
+
+        // Initialize a new student
+        Student student;
+        student.userID = userID;
+        strncpy(student.name, name, sizeof(student.name));
+        student.name[sizeof(student.name) - 1] = '\0'; // Null-terminate
+        student.numCoursesEnrolled = 0;
+
+        // Read courses
+        token = strtok(NULL, ",");
+        while (token != NULL) {
+            // Avoid buffer overflow
+            strncpy(student.coursesEnrolled[student.numCoursesEnrolled], token, sizeof(student.coursesEnrolled[student.numCoursesEnrolled]));
+            student.coursesEnrolled[student.numCoursesEnrolled][sizeof(student.coursesEnrolled[student.numCoursesEnrolled]) - 1] = '\0';
+            student.numCoursesEnrolled++;
+            token = strtok(NULL, ",");
         }
 
-        (*numStudents)++;
+        // Check for duplicate student ID before adding the student
+        int duplicate = 0;
+        for (int i = 0; i < *numStudents; i++) {
+            if (students[i].userID == student.userID) {
+                duplicate = 1;
+                break;
+            }
+        }
+
+        if (!duplicate) {
+            // Add the student to the students array if not a duplicate
+            students[*numStudents] = student;
+            (*numStudents)++;
+        }
     }
 
     fclose(file);
@@ -284,6 +314,35 @@ void viewAndUpdateCourseInfo() {
     } while (inputChoice == 'y' || inputChoice == 'Y'); // Loop until the user chooses not to update any more courses
 }
 
+void rewriteStudentProfiles(Student students[], int numStudents) {
+    // Open the file in write mode to clear existing data and rewrite the profiles
+    FILE *studentFile = fopen("student_profiles.txt", "w");
+    if (studentFile == NULL) {
+        printf("Error opening student profiles file for writing.\n");
+        return;
+    }
+
+    // Iterate through the student array and write each student's profile to the file
+    for (int i = 0; i < numStudents; i++) {
+        // Write the student ID and name
+        fprintf(studentFile, "%d,%s", students[i].userID, students[i].name);
+        
+        // Write the courses enrolled
+        for (int j = 0; j < students[i].numCoursesEnrolled; j++) {
+            fprintf(studentFile, ",%s", students[i].coursesEnrolled[j]);
+        }
+        
+        // Write a single newline after each student's data
+        fprintf(studentFile,"\n");
+    }
+
+    // Close the file
+    fclose(studentFile);
+}
+
+
+
+
 void enrollStudents() {
     printf("Enrolling Students into Specific Course...\n");
 
@@ -294,6 +353,7 @@ void enrollStudents() {
         return;
     }
 
+    // Define the Course structure and initialize it
     Course course;
     printf("\nCourse Information:\n");
     printf("Code\tName\t\t\t\tStudents Enrolled\tLecturer\n");
@@ -315,7 +375,7 @@ void enrollStudents() {
             return;
         }
 
-        // Check if the entered course code exists
+        // Check if the entered course code exists in the course_info file
         int courseFound = 0;
         file = fopen("course_info.txt", "r");
         if (file == NULL) {
@@ -331,10 +391,11 @@ void enrollStudents() {
         }
         fclose(file);
 
-        if (courseFound)
+        if (courseFound) {
             break; // Exit loop if course code is found
-        else
+        } else {
             printf("Course code not found. Please try again.\n");
+        }
     }
 
     // Read existing student profiles to check for duplicate IDs
@@ -369,42 +430,52 @@ void enrollStudents() {
             continue;
         }
 
-        // Check if the user ID is already in use
-        int idInUse = 0;
-        for (int i = 0; i < numStudents; i++) {
-            if (students[i].userID == userID) {
-                idInUse = 1;
-                break;
-            }
-        }
-
-        if (idInUse) {
-            printf("User ID %d is already in use. Please enter a different user ID.\n", userID);
-            continue;
-        }
-
         // Prompt for student name
         char studentName[MAX_NAME];
         printf("Enter student name: ");
         scanf("%49s", studentName);
 
-        // Write the student information into the student_profiles.txt file
-        fprintf(studentFile, "%d,%s,%s\n", userID, studentName, courseCode);
-        
-        // Add the newly enrolled student to the students array
-        students[numStudents].userID = userID;
-        strcpy(students[numStudents].name, studentName);
-        strcpy(students[numStudents].coursesEnrolled[students[numStudents].numCoursesEnrolled], courseCode);
+        // Find or add the student in the array
+        int studentIndex = -1;
+        for (int i = 0; i < numStudents; i++) {
+            if (students[i].userID == userID) {
+                studentIndex = i;
+                break;
+            }
+        }
 
-        numStudents++;
+        if (studentIndex == -1) {
+            // If student does not exist, add a new student
+            studentIndex = numStudents++;
+            students[studentIndex].userID = userID;
+            strcpy(students[studentIndex].name, studentName);
+            students[studentIndex].numCoursesEnrolled = 0;
+        }
+
+        // Check if the student is already enrolled in the course
+        int alreadyEnrolled = 0;
+        for (int j = 0; j < students[studentIndex].numCoursesEnrolled; j++) {
+            if (strcmp(students[studentIndex].coursesEnrolled[j], courseCode) == 0) {
+                alreadyEnrolled = 1;
+                break;
+            }
+        }
+
+        if (alreadyEnrolled) {
+            printf("Student is already enrolled in the course. Please try again.\n");
+            continue;
+        }
+
+        // Enroll the student in the course
+        strcpy(students[studentIndex].coursesEnrolled[students[studentIndex].numCoursesEnrolled], courseCode);
+        students[studentIndex].numCoursesEnrolled++;
     }
 
     // Close the student profiles file
     fclose(studentFile);
-
-    // Update the student profiles in memory
-    // Re-read the student profiles file in case the list was updated
-    readStudentProfiles(students, &numStudents);
+    
+    // After enrolling students, rewrite the student profiles file with the updated data
+    rewriteStudentProfiles(students, numStudents);
 
     // Display the updated student profiles
     viewStudentProfiles(students, numStudents);
@@ -441,6 +512,8 @@ void enrollStudents() {
 
     printf("Students enrolled successfully.\n");
 }
+
+
 
 
 
