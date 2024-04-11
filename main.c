@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+
+ //my part
  // Function to clear the input buffer
 void clearInputBuffer() {
     int ch;
@@ -141,7 +143,7 @@ int validateCredentials(int userID, char *password) {
     FILE *file = fopen("users.txt", "r");
     if (file != NULL) {
         while (fscanf(file, "%d %s %s \"%[^\"]\"", &user.userID, user.username, user.password, user.role) != EOF) {
-            printf("Debug: Read userID = %d, username = %s, password = %s, role = %s\n", user.userID, user.username, user.password, user.role); // Print debugging information
+//            printf("Debug: Read userID = %d, username = %s, password = %s, role = %s\n", user.userID, user.username, user.password, user.role); // Print debugging information
             if (user.userID == userID) {
                 fclose(file);
                 if (strcmp(user.password, password) == 0) {

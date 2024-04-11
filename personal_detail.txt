@@ -1,0 +1,5 @@
+100,Shafs,Male,1998-05-15,shafs@cmail.com,0123456789
+222,Cy,Male,1997-08-20,cy@cmail.com,0123334444
+333,Nicole,Female,1999-02-10,nicole@cmail.com,0125556666
+444,Yuhuang,Male,1997-04-30,yuhuang@cmail.com,0187779999
+666,Sam,Male,1999-09-05,sam@cmail.com,0176668888
