@@ -49,7 +49,7 @@ void readGrades(struct Student *students, int numStudents) {
         char grade[3]; // Updated size to accommodate grades as strings
 
         while (fscanf(file, "%d,%[^,],%s", &userID, courseCode, grade) == 3) {
-//            printf("Read grade: %s for user %d in course %s\n", grade, userID, courseCode); // Debug print
+            printf("Read grade: %s for user %d in course %s\n", grade, userID, courseCode); // Debug print
             for (int i = 0; i < numStudents; ++i) {
                 if (students[i].userID == userID) {
                     for (int j = 0; j < MAX_COURSES; ++j) {
@@ -676,6 +676,7 @@ void readStudentProfiles(Student *students, int *numStudents) {
 void viewStudentProfiles(Student students[], int numStudents) {
     printf("Student Profiles:\n");
     printf("ID\tName\t\tCourses Enrolled\n");
+    printf("***********************************\n");
 
     for (int i = 0; i < numStudents; i++) {
         printf("%d\t%s\t\t", students[i].userID, students[i].name);
@@ -760,6 +761,7 @@ void viewAndUpdateCourseInfo() {
         Course course;
         printf("\nCourse Information:\n");
         printf("Code\tName\t\t\t\tStudents Enrolled\tLecturer\n");
+        printf("**********************************************\n");
 
         // Display course information from the file
         while (fscanf(file, "%9[^,],%49[^,],%d,%49[^\n]%*c", course.courseCode, course.courseName, &course.numStudentsEnrolled, course.lecturerName) == 4) {
@@ -809,6 +811,7 @@ void viewAndUpdateCourseInfo() {
                     printf("1. Course Name\n");
                     printf("2. Number of Students Enrolled\n");
                     printf("3. Back\n");
+                    printf("***********************************\n");
                     printf("Enter your choice: ");
                     int updateOption;
                     scanf("%d", &updateOption);
@@ -888,6 +891,7 @@ void enrollStudents() {
     Course course;
     printf("\nCourse Information:\n");
     printf("Code\tName\t\t\t\tStudents Enrolled\tLecturer\n");
+    printf("*************************************************\n");
 
     // Display course information from the file
     while (fscanf(file, "%9[^,],%49[^,],%d,%49[^\n]%*c", course.courseCode, course.courseName, &course.numStudentsEnrolled, course.lecturerName) == 4) {
@@ -1736,6 +1740,7 @@ void programmeAdminMenu() {
         printf("3. Enroll Students into Specific Course\n");
         printf("4. Assign Lecturer with Specific Course\n");
         printf("5. Logout\n");
+        printf("***********************************\n");
         printf("Enter your choice: ");
 
         result = scanf("%d", &choice); // Read the user's choice
@@ -1826,7 +1831,7 @@ void systemAdminMenu() {
         printf("\n********** System Administrator Menu **********\n");
         printf("1. User Management\n");
         printf("2. Grading System\n");
-        printf("4. Logout\n");
+        printf("3. Logout\n");
         printf("**************************\n");
         printf("Enter your choice: ");
         result = scanf("%d", &choice);
@@ -1840,7 +1845,7 @@ void systemAdminMenu() {
                 case 2:
                     GradingSystem();
                     break;
-                case 4:
+                case 3:
                     printf("Logging out...\n");
                     return;  // Return from the function when logout is selected
                 default:
@@ -1979,4 +1984,3 @@ int main() {
     mainMenu();
     return 0;
 }
-
