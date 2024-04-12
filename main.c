@@ -1314,7 +1314,7 @@ void updateUsername(int userID, char *newUsername) {
     char line[256];
     if (file != NULL && tempFile != NULL) {
         while (fgets(line, sizeof(line), file)) {
-            scanf(line, "%d %s %s %s", &user.userID, user.username, user.password, user.role);
+            sscanf(line, "%d %s %s %s", &user.userID, user.username, user.password, user.role);
             if (user.userID == userID) {
                 strcpy(user.username, newUsername);
             }
