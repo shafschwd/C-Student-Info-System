@@ -173,41 +173,45 @@ void modifyPersonalDetails(struct Student *students, int numStudents, int userID
     writePersonalDetails(students, numStudents);
 }
 
-void viewCourseGradesAndCGPA(struct Student student) {
-    printf("\n-- Enrolled Courses and Grades --\n");
-    int courseCount = 0;
-    float totalGradePoints = 0.0;
-    int totalCourses = 0;
-    for (int i = 0; i < MAX_COURSES; i++) {
-        if (strcmp(student.grades[i], "") != 0) {
-            printf("Course %d: %s, Grade: %s\n", ++courseCount, student.enrolledCourses[i], student.grades[i]);
-            totalCourses++;
-            totalGradePoints += gradeToPoint(student.grades[i]);
-            if (courseCount >= 2) // Limiting to only the first two courses
-                break;
-        }
-    }
+float getCGPAForCourse(int userID, char* courseCode) {
+    FILE *file = fopen("cgpa.txt", "r");
+    if (file) {
+        int fileUserID;
+        char fileCourseCode[10];
+        float cgpa;
 
-    printf("\n-- CGPA --\n");
-    if (totalCourses > 0) {
-        float CGPA = totalGradePoints / totalCourses;
-        printf("CGPA: %.2f\n", CGPA);
+        while (fscanf(file, "%d,%[^,],%f", &fileUserID, fileCourseCode, &cgpa) == 3) {
+            if (fileUserID == userID && strcmp(fileCourseCode, courseCode) == 0) {
+                fclose(file);
+                return cgpa;
+            }
+        }
+        fclose(file);
     } else {
-        printf("No grades available to calculate CGPA.\n");
+        printf("Error reading cgpa.txt file.\n");
+    }
+    return -1.0; // return -1.0 if CGPA not found
+}
+
+void viewCourseGradesAndCGPA(struct Student student) {
+    printf("-- Enrolled Courses, Grades and CGPA --\n");
+    for (int i = 0; i < MAX_COURSES; ++i) {
+        if (strlen(student.enrolledCourses[i]) > 0) {
+            float cgpa = getCGPAForCourse(student.userID, student.enrolledCourses[i]);
+            printf("Course %d: %s, Grade: %s, CGPA: %.2f\n", i+1, student.enrolledCourses[i], student.grades[i], cgpa);
+        }
     }
 }
 
 float gradeToPoint(char* grade) {
-    if (strcmp(grade, "A") == 0) return 4.0;
-    else if (strcmp(grade, "A-") == 0) return 3.7;
+    if (strcmp(grade, "A+") == 0) return 4.0;
+    else if (strcmp(grade, "A") == 0) return 3.7;
     else if (strcmp(grade, "B+") == 0) return 3.3;
     else if (strcmp(grade, "B") == 0) return 3.0;
-    else if (strcmp(grade, "B-") == 0) return 2.7;
-    else if (strcmp(grade, "C+") == 0) return 2.3;
-    else if (strcmp(grade, "C") == 0) return 2.0;
-    else if (strcmp(grade, "C-") == 0) return 1.7;
-    else if (strcmp(grade, "D+") == 0) return 1.3;
-    else if (strcmp(grade, "D") == 0) return 1.0;
+    else if (strcmp(grade, "C+") == 0) return 2.7;
+    else if (strcmp(grade, "C") == 0) return 2.3;
+    else if (strcmp(grade, "C-") == 0) return 2.0;
+    else if (strcmp(grade, "D") == 0) return 1.6;
     else if (strcmp(grade, "F") == 0) return 0.0;
     else return -1.0; // Invalid grade
 }
