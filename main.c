@@ -596,14 +596,14 @@ typedef struct {
     char name[50];
     char coursesEnrolled[MAX_COURSES][MAX_COURSE_CODE_LENGTH]; // Array to store course codes
     int numCoursesEnrolled; // Number of courses enrolled by the student
-} Student;
+} student;
 
 typedef struct {
     char courseCode[MAX_CODE];
     char courseName[MAX_NAME];
     int numStudentsEnrolled;
     char lecturerName[MAX_NAME];
-} Course;
+} course;
 
 // Function prototypes
 void readStudentProfiles(Student students[], int *numStudents);
@@ -614,57 +614,6 @@ void updateCourseInFile(const Course *course, const char *lecturerName);
 void enrollStudents();
 void assignLecturer();
 
-int main() {
-    int choice;
-    Student students[MAX_STUDENTS];
-    int numStudents = 0;
-
-    readStudentProfiles(students, &numStudents);
-
-    do {
-        printf("\nProgramme Administrator Menu\n");
-        printf("1. View Student Profiles\n");
-        printf("2. View and Update Course Information\n");
-        printf("3. Enroll Students into Specific Course\n");
-        printf("4. Assign Lecturer with Specific Course\n");
-        printf("5. Logout\n");
-        printf("Enter your choice: ");
-        
-        // Check if the input is an integer
-        if (scanf("%d", &choice) != 1) {
-            // Clear the invalid input from the input buffer
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
-            printf("Invalid input. Please enter a number.\n");
-            continue;
-        }
-
-        switch (choice) {
-            case 1:
-                readStudentProfiles(students, &numStudents);
-                viewStudentProfiles(students, numStudents);
-                break;
-            case 2:
-                viewAndUpdateCourseInfo();
-                break;
-            case 3:
-                enrollStudents();
-                
-                break;
-            case 4:
-                assignLecturer();
-                break;
-            case 5:
-                printf("Logged out successfully.\n");
-                
-                break;
-            default:
-                printf("Invalid choice. Please enter a valid option.\n");
-        }
-    } while (choice != 5);
-
-    return 0;
-}
 
 void readStudentProfiles(Student *students, int *numStudents) {
     FILE *file = fopen("student_profiles.txt", "r");
