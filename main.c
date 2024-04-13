@@ -1708,24 +1708,37 @@ void generateStudentReport() {
 
     if (foundCgpa && foundAttendance) {
         printf("\n--- Student Report ---\n");
-        printf("Student ID: %d\n", studentID);
-        printf("CGPA: %.2f\n", cgpa);
-        printf("Attendance: %.2f%%\n", attendancePercentage);
+        printf("| Student ID: %d |\n", studentID);
+        printf("| CGPA: %.2f |\n", cgpa);
+        printf("| Attendance: %.2f%% |\n", attendancePercentage);
+        printf("\n| Student Overall Report: |\n");
 
-        if (cgpa < 2.0) {
+        if (cgpa < 1.0) {
+            printf("Failed, need to retake the course.\n");
+        } else if (cgpa >= 1.0 && cgpa < 2.0) {
             printf("Just passed, need to work harder.\n");
-        } else if (cgpa >= 2.0 && cgpa < 3.7) {
+        } else if (cgpa >= 2.0 && cgpa < 3.0) {
+            printf("Average, can do better!\n");
+        } else if (cgpa >= 3.0 && cgpa < 3.7) {
+            printf("Good, keep it up!\n");
+        } else if (cgpa >= 3.7 && cgpa < 4.0) {
             printf("Distinction is not far away!\n");
-        } else if (cgpa >= 3.7) {
-            printf("CGPA is distinction!!\n");
+        } else if (cgpa >= 4.0) {
+            printf("Excellent, you have achieved distinction!!\n");
         }
 
-        if (attendancePercentage < 50.0) {
-            printf("Need to be diligent and attend the classes for learning.\n");
-        } else if (attendancePercentage >= 50.0 && attendancePercentage < 80.0) {
-            printf("Most of the students have the same attendance.\n");
-        } else if (attendancePercentage >= 80.0) {
-            printf("Hardworking for attending every class, proud of you.\n");
+        if (attendancePercentage < 30.0) {
+            printf("Very low attendance, need to attend more classes.\n");
+        } else if (attendancePercentage >= 30.0 && attendancePercentage < 50.0) {
+            printf("Low attendance, need to be more diligent and attend the classes for learning.\n");
+        } else if (attendancePercentage >= 50.0 && attendancePercentage < 70.0) {
+            printf("Average attendance, most of the students have the same attendance.\n");
+        } else if (attendancePercentage >= 70.0 && attendancePercentage < 80.0) {
+            printf("Good attendance, keep it up!\n");
+        } else if (attendancePercentage >= 80.0 && attendancePercentage < 90.0) {
+            printf("Very good attendance, hardworking for attending every class.\n");
+        } else if (attendancePercentage >= 90.0) {
+            printf("Excellent attendance, proud of you for attending every class.\n");
         }
     } else {
         printf("Unable to generate report. This student hasn't enrolled in a course\n");
