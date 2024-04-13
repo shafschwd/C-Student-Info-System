@@ -49,7 +49,7 @@ void readGrades(struct Student *students, int numStudents) {
         char grade[3]; // Updated size to accommodate grades as strings
 
         while (fscanf(file, "%d,%[^,],%s", &userID, courseCode, grade) == 3) {
-            printf("Read grade: %s for user %d in course %s\n", grade, userID, courseCode); // Debug print
+//            printf("Read grade: %s for user %d in course %s\n", grade, userID, courseCode); // Debug print
             for (int i = 0; i < numStudents; ++i) {
                 if (students[i].userID == userID) {
                     for (int j = 0; j < MAX_COURSES; ++j) {
@@ -225,7 +225,9 @@ void viewAttendance(struct Student student) {
 //nicole part end
 
 
+
 // yuhuang part
+
 #define MAX_CODE 11
 #define MAX_NAME 52
 #define MAX_LINE 257
@@ -236,8 +238,6 @@ void viewAttendance(struct Student student) {
 #define MAX_GRADE 6
 #define MAX_ATTENDANCE 21
 #define MAX_CGPA 5
-
-
 
 typedef struct {
     char courseCode[MAX_CODE];
@@ -259,94 +259,77 @@ int isValidUserID(const char* userID) {
 }
 
 float getCGPA(const char* grade) {
-    // Placeholder for CGPA conversion logic.
-    return 4.0; // Example: assume all grades convert to 4.0.
+    if (strcmp(grade, "A+") == 0) return 4.0;
+    if (strcmp(grade, "A") == 0) return 3.70;
+    if (strcmp(grade, "B+") == 0) return 3.30;
+    if (strcmp(grade, "B") == 0) return 3.00;
+    if (strcmp(grade, "C+") == 0) return 2.70;
+    if (strcmp(grade, "C") == 0) return 2.30;
+    if (strcmp(grade, "C-") == 0) return 2.00;
+    if (strcmp(grade, "D") == 0) return 1.60;
+    if (strcmp(grade, "F") == 0) return 0.00;
+    return 0.0; // Default for unknown grades
 }
 
 // Validate the student ID is between 100 and 999.
-int isvalidUserID(const char* userID) {
+int isValiduserID(const char* userID) {
     int id = atoi(userID); // Convert string to integer.
     return (id >= 100 && id <= 999);
 }
 
 void viewGrades() {
     char targetUserID[MAX_ID];
-    char line[MAX_LINE];
     int validInput = 0;
 
     while (!validInput) {
         printf("Enter the user ID to view grades (or type 'exit' to return): ");
         scanf("%s", targetUserID);
+        if (strcmp(targetUserID, "exit") == 0) return; // User exits the function.
 
-        if (strcmp(targetUserID, "exit") == 0) return; // Exit if user types "exit".
-
-        // Validate user ID.
         if (!isValidUserID(targetUserID)) {
             printf("Invalid user ID. Please try again.\n");
-            continue; // Skip the rest of the loop and prompt again.
+            continue; // Ask again if the user ID is not valid.
         }
-
-        validInput = 1; // ID is valid, proceed.
+        validInput = 1; // Proceed when a valid user ID is provided.
     }
 
-    FILE* file = fopen("grades.txt", "r");
-    if (!file) {
-        perror("Failed to open grades.txt");
+    FILE *gradesFile = fopen("grades.txt", "r");
+    FILE *cgpaFile = fopen("cgpa.txt", "r");
+    if (!gradesFile || !cgpaFile) {
+        perror("Failed to open one or more files");
+        if (gradesFile) fclose(gradesFile);
+        if (cgpaFile) fclose(cgpaFile);
         return;
     }
 
+    char gradesLine[MAX_LINE], cgpaLine[MAX_LINE];
     int found = 0;
     printf("ID\tCourse Code\tGrade\tCGPA\n");
     printf("----------------------------------------\n");
 
-    while (fgets(line, sizeof(line), file) != NULL) {
+    // Read both files line by line
+    while (fgets(gradesLine, sizeof(gradesLine), gradesFile) && fgets(cgpaLine, sizeof(cgpaLine), cgpaFile)) {
         char userID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE], cgpaStr[MAX_CGPA];
 
-        // Updated to match the new file format.
-        if (sscanf(line, "%[^,],%[^,],%[^,],%s", userID, courseCode, grade, cgpaStr) == 4 && strcmp(userID, targetUserID) == 0) {
-            printf("%s\t%s\t\t%s\t%s\n", userID, courseCode, grade, cgpaStr);
-            found = 1;
+        if (sscanf(gradesLine, "%[^,],%[^,],%s", userID, courseCode, grade) == 3) {
+            sscanf(cgpaLine, "%*[^,],%*[^,],%s", cgpaStr); // Ignore userID and courseCode in cgpa.txt
+            if (strcmp(userID, targetUserID) == 0) {
+                printf("%s\t%s\t\t%s\t%s\n", userID, courseCode, grade, cgpaStr);
+                found = 1;
+            }
         }
     }
 
-    fclose(file);
+    fclose(gradesFile);
+    fclose(cgpaFile);
 
     if (!found) {
         printf("No grades found for user ID %s.\n", targetUserID);
     }
 }
 
-
 const char* validGrades[] = {"A+", "A", "B+", "B", "C+", "C", "C-", "D", "F"};
 const int numValidGrades = sizeof(validGrades) / sizeof(validGrades[0]);
-
-int isValidGrade(const char* grade) {
-    for (int i = 0; i < numValidGrades; ++i) {
-        if (strcmp(grade, validGrades[i]) == 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-
-int isValiduserID(const char* userID) {
-    FILE* file = fopen("grades.txt", "r");
-    char line[MAX_LINE], id[MAX_ID];
-    if (!file) {
-        perror("Unable to open the file");
-        return 0;
-    }
-    while (fgets(line, sizeof(line), file)) {
-        sscanf(line, "%[^,]", id);
-        if (strcmp(id, userID) == 0) {
-            fclose(file);
-            return 1;
-        }
-    }
-    fclose(file);
-    return 0;
-}
 
 float gradeToCGPA(const char* grade) {
     if (strcmp(grade, "A+") == 0) return 4.00;
@@ -360,23 +343,13 @@ float gradeToCGPA(const char* grade) {
     if (strcmp(grade, "F") == 0) return 0.00;
     return -1;
 }
-
-int isvalidGrade(const char* grade) {
-    return gradeToCGPA(grade) != -1;
-}
-
-int isvaliduserID(const char* userID) {
-    int id = atoi(userID);
-    return id >= 100 && id <= 999;
-}
-
+int isValidUserID(const char* userID);
 int isValidCourseCode(const char* courseCode) {
     FILE* file = fopen("grades.txt", "r");
     if (!file) {
         perror("Unable to open the file");
         return 0;
     }
-
     char line[MAX_LINE];
     while (fgets(line, sizeof(line), file)) {
         char readCourseCode[MAX_COURSE_ID];
@@ -390,88 +363,97 @@ int isValidCourseCode(const char* courseCode) {
     return 0;
 }
 
+int isValidGrade(const char* grade) {
+    const char* validGrades[] = {"A+", "A", "B+", "B", "C+", "C", "C-", "D", "F"};
+    int numValidGrades = sizeof(validGrades) / sizeof(validGrades[0]);
+
+    for (int i = 0; i < numValidGrades; ++i) {
+        if (strcmp(grade, validGrades[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
 void modifyGrades() {
-    char targetUserID[MAX_ID];
-    char targetCourseCode[MAX_COURSE_ID];
-    char newGrade[MAX_GRADE];
+    char targetUserID[MAX_ID], targetCourseCode[MAX_COURSE_ID], newGrade[MAX_GRADE];
     float cgpa;
 
-    do {
+    // Ensure User ID is valid
+    while (1) {
         printf("Enter User ID to modify grade or 'exit' to cancel: ");
         scanf("%s", targetUserID);
-        if (strcmp(targetUserID, "exit") == 0) {
-            return;
-        }
-        if (!isValidUserID(targetUserID)) {
-            printf("Invalid user ID, must be between 100 and 999. Please try again.\n");
-        } else {
-            break;
-        }
-    } while (1);
+        if (strcmp(targetUserID, "exit") == 0) return;
+        if (isValidUserID(targetUserID)) break;
+        printf("Invalid user ID, must be between 100 and 999. Please try again.\n");
+    }
 
-    do {
+    // Ensure Course Code is valid
+    while (1) {
         printf("Enter Course Code or 'exit' to cancel: ");
         scanf("%s", targetCourseCode);
-        if (strcmp(targetCourseCode, "exit") == 0) {
-            return;
-        }
-        if (!isValidCourseCode(targetCourseCode)) {
-            printf("Invalid course code, please try again.\n");
-        } else {
-            break;
-        }
-    } while (1);
+        if (strcmp(targetCourseCode, "exit") == 0) return;
+        if (isValidCourseCode(targetCourseCode)) break;
+        printf("Invalid course code, please try again.\n");
+    }
 
-    do {
+    // Ensure Grade is valid
+    while (1) {
         printf("Enter new Grade (A+, A, B+, B, C+, C, C-, D, F) or 'exit' to cancel: ");
         scanf("%s", newGrade);
-        if (strcmp(newGrade, "exit") == 0) {
-            return;
-        }
-        if (!isValidGrade(newGrade)) {
-            printf("Invalid Grade, please try again.\n");
-        } else {
-            cgpa = gradeToCGPA(newGrade);
-            break;
-        }
-    } while (1);
+        if (strcmp(newGrade, "exit") == 0) return;
+        if (isValidGrade(newGrade)) break;
+        printf("Invalid Grade, please try again.\n");
+    }
 
-    FILE* file = fopen("grades.txt", "r");
-    FILE* tempFile = fopen("temp_grades.txt", "w");
-    if (!file || !tempFile) {
-        perror("Error opening files");
+    cgpa = gradeToCGPA(newGrade);
+
+    // File handling for grades and CGPA
+    FILE *gradesFile = fopen("grades.txt", "r");
+    FILE *cgpaFile = fopen("cgpa.txt", "r");
+    FILE *tempGradesFile = fopen("temp_grades.txt", "w");
+    FILE *tempCgpaFile = fopen("temp_cgpa.txt", "w");
+
+    if (!gradesFile || !cgpaFile || !tempGradesFile || !tempCgpaFile) {
+        perror("Error opening one or more files");
         return;
     }
 
-    char line[MAX_LINE];
+    char line[MAX_LINE], cgpaLine[MAX_LINE];
     int found = 0;
-    while (fgets(line, sizeof(line), file)) {
+    while (fgets(line, sizeof(line), gradesFile) && fgets(cgpaLine, sizeof(cgpaLine), cgpaFile)) {
         char userID[MAX_ID], courseCode[MAX_COURSE_ID], grade[MAX_GRADE];
-        float fileCgpa;
-        if (sscanf(line, "%[^,],%[^,],%[^,],%f", userID, courseCode, grade, &fileCgpa) == 4) {
+        if (sscanf(line, "%[^,],%[^,],%s", userID, courseCode, grade) == 3) {
             if (strcmp(userID, targetUserID) == 0 && strcmp(courseCode, targetCourseCode) == 0) {
-                fprintf(tempFile, "%s,%s,%s,%.2f\n", userID, courseCode, newGrade, cgpa);
+                fprintf(tempGradesFile, "%s,%s,%s\n", userID, courseCode, newGrade);
+                fprintf(tempCgpaFile, "%s,%s,%.2f\n", userID, courseCode, cgpa);
                 found = 1;
             } else {
-                fputs(line, tempFile);
+                fputs(line, tempGradesFile);
+                fputs(cgpaLine, tempCgpaFile);
             }
         }
     }
 
-    fclose(file);
-    fclose(tempFile);
+    fclose(gradesFile);
+    fclose(cgpaFile);
+    fclose(tempGradesFile);
+    fclose(tempCgpaFile);
 
     if (found) {
         remove("grades.txt");
         rename("temp_grades.txt", "grades.txt");
+        remove("cgpa.txt");
+        rename("temp_cgpa.txt", "cgpa.txt");
         printf("Grade and CGPA updated successfully.\n");
     } else {
         printf("No matching record found to update.\n");
-        remove("temp_grades.txt");
     }
 }
 
-void ltviewAttendance() {
+
+void lviewAttendance() {
     FILE* file = fopen("attendance.txt", "r");
     if (!file) {
         perror("Unable to open the file");
@@ -1802,7 +1784,7 @@ void lecturerMenu() {
                     modifyGrades();
                     break;
                 case 3:
-                    ltviewAttendance();
+                    lviewAttendance();   ;
                     break;
                 case 4:
                     updateAttendance();
