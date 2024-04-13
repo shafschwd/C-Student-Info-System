@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 //nicole part start
 #define MAX_STUDENTS 6
@@ -1569,6 +1570,8 @@ void userManagementMenu() {
     } while(1);
 }
 
+// grading system
+
 void GradingSystem() {
     FILE *file = fopen("grading_system.txt", "r");
     if (file == NULL) {
@@ -1592,47 +1595,113 @@ void GradingSystem() {
     fclose(file);
 }
 
-// void GradingSystem() {
-//     char is_update;
-//     printf("\nCurrent grading system: \n");
-//     show_grading_system();
+// genrate student report
 
-//     printf("You want to update grading system (y/n): ");
-//     scanf("%c", &is_update);
+bool getStudentCGPA(int userID, float *cgpa) {
+//    printf("Debug: Entered getStudentCGPA with userID = %d\n", userID);  // Debug print
 
-//     if (is_update == 'y') {
-//         FILE *grading_file = fopen("grading_system.txt", "w");
+    FILE *file = fopen("cgpa.txt", "r");
+    if (file) {
+//        printf("Debug: Opened cgpa.txt successfully\n");  // Debug print
 
-//         if (grading_file == NULL) {
-//             printf("Error creating grading system file.\n");
-//             return;
-//         }
+        int fileUserID;
+        float fileCGPA;
+        char courseName[50];
+        float totalCGPA = 0.0;
+        int totalCourses = 0;
 
-//         char *grades[] = {"A+", "A", "B+", "B", "C+", "C", "C-", "D", "F"};
-//         float cpa[] = {4.0, 3.7, 3.3, 3.0, 2.7, 2.3, 2.0, 1.6, 0};
+        while (fscanf(file, "%d,%49[^,],%f", &fileUserID, courseName, &fileCGPA) == 3) {
+            if (fileUserID == userID) {
+                totalCGPA += fileCGPA;
+                totalCourses++;
+            }
+        }
+        fclose(file);
 
-//         int num_ranges = sizeof(grades)/sizeof(grades[0]);
+        if (totalCourses > 0) {
+            *cgpa = totalCGPA / totalCourses;
+//            printf("Debug: Calculated CGPA = %f\n", *cgpa);  // Debug print
+            return true;
+        }
+    } else {
+        printf("Error reading cgpa.txt file.\n");
+    }
+//    printf("Debug: Exiting getStudentCGPA. Did not find matching userID.\n");  // Debug print
+    return false;
+}
 
-//         for (int i = 0; i < num_ranges; i++) {
-//             int lower_bound, upper_bound;
+bool getStudentAttendancePercentage(int userID, float *attendancePercentage) {
+//    printf("Debug: Entered getStudentAttendancePercentage with userID = %d\n", userID);  // Debug print
 
-//             printf("Enter the upper bound for %s: ", grades[i]);
-//             scanf("%d", &upper_bound);
+    FILE *file = fopen("attendance.txt", "r");
+    if (file) {
+//        printf("Debug: Opened attendance.txt successfully\n");  // Debug print
 
-//             printf("Enter the lower bound for %s: ", grades[i]);
-//             scanf("%d", &lower_bound);
+        int fileUserID;
+        char fileAttendancePercentageStr[50];
+        char courseName[50];
 
-//             fprintf(grading_file, "%d - %d %s %.2lf\n", lower_bound, upper_bound, grades[i], cpa[i]);
-//         }
+        while (fscanf(file, "%d,%49[^,],%49s", &fileUserID, courseName, fileAttendancePercentageStr) == 3) {
+            float fileAttendancePercentage;
+            sscanf(fileAttendancePercentageStr, "%f%%", &fileAttendancePercentage);  // Convert string to float
 
-//         fclose(grading_file);
-//         printf("Grading system defined successfully.\n");
-//     } else if (is_update == 'n') {
-//         return;
-//     } else {
-//         printf("Please enter a valid value");
-//     }
-// }
+//            printf("Debug: Read userID = %d, courseName = %s, AttendancePercentage = %f from file\n", fileUserID, courseName, fileAttendancePercentage);  // Debug print
+
+            if (fileUserID == userID) {
+                *attendancePercentage = fileAttendancePercentage;
+//                printf("Debug: Found matching userID. AttendancePercentage = %f\n", *attendancePercentage);  // Debug print
+                fclose(file);
+                return true;
+            }
+        }
+        fclose(file);
+    } else {
+        printf("Error reading attendance.txt file.\n");
+    }
+//    printf("Debug: Exiting getStudentAttendancePercentage. Did not find matching userID.\n");  // Debug print
+    return false;
+}
+
+void generateStudentReport() {
+    int studentID;
+    printf("Enter student ID for report generation: ");
+    scanf("%d", &studentID);
+
+    float cgpa = 0.0;
+    bool foundCgpa = false;
+
+    foundCgpa = getStudentCGPA(studentID, &cgpa);
+
+    float attendancePercentage = 0.0;
+    bool foundAttendance = false;
+
+    foundAttendance = getStudentAttendancePercentage(studentID, &attendancePercentage);
+
+    if (foundCgpa && foundAttendance) {
+        printf("\n--- Student Report ---\n");
+        printf("Student ID: %d\n", studentID);
+        printf("CGPA: %.2f\n", cgpa);
+        printf("Attendance: %.2f%%\n", attendancePercentage);
+
+        if (cgpa < 2.0) {
+            printf("Just passed, need to work harder.\n");
+        } else if (cgpa >= 2.0 && cgpa < 3.7) {
+            printf("Distinction is not far away!\n");
+        } else if (cgpa >= 3.7) {
+            printf("CGPA is distinction!!\n");
+        }
+
+        if (attendancePercentage < 50.0) {
+            printf("Need to be diligent and attend the classes for learning.\n");
+        } else if (attendancePercentage >= 50.0 && attendancePercentage < 80.0) {
+            printf("Most of the students have the same attendance.\n");
+        } else if (attendancePercentage >= 80.0) {
+            printf("Hardworking for attending every class, proud of you.\n");
+        }
+    } else {
+        printf("Unable to generate report. This student hasn't enrolled in a course\n");
+    }
+}
 
 // Function to display menus
 
@@ -1817,7 +1886,8 @@ void systemAdminMenu() {
         printf("\n********** System Administrator Menu **********\n");
         printf("1. User Management\n");
         printf("2. Grading System\n");
-        printf("3. Logout\n");
+        printf("3. Generate report\n");
+        printf("4. Logout\n");
         printf("**************************\n");
         printf("Enter your choice: ");
         result = scanf("%d", &choice);
@@ -1832,6 +1902,9 @@ void systemAdminMenu() {
                     GradingSystem();
                     break;
                 case 3:
+                    generateStudentReport();
+                    break;
+                case 4:
                     printf("Logging out...\n");
                     return;  // Return from the function when logout is selected
                 default:
