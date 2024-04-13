@@ -1182,7 +1182,7 @@ typedef struct {
     char role[50];
 } User;
 
-// Function to check if a user exists
+// Function to check if a users exists
 int userExists(int userID) {
     FILE *file = fopen("users.txt", "r");
     if (file == NULL) {
